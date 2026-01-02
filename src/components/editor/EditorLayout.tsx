@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Sidebar } from './Sidebar';
+import { FontLoader } from '@/components/FontLoader';
 import { usePosterStore } from '@/store/posterStore';
 import { PosterGallery } from '../PosterGallery';
 import { Settings } from '../Settings';
@@ -14,7 +15,7 @@ const CanvasArea = dynamic(() => import('./CanvasArea').then(m => m.CanvasArea),
 });
 
 export default function EditorLayout() {
-    const { view, setView, triggerExport, savePoster, currentPosterId } = usePosterStore();
+    const { view, setView, triggerExport, savePoster, currentPosterId, config } = usePosterStore();
 
     // Init Theme
     useEffect(() => {
@@ -38,6 +39,7 @@ export default function EditorLayout() {
 
     return (
         <div className="flex h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)] font-sans">
+            <FontLoader />
             {/* Sidebar - Only visible in Editor Mode */}
             {view === 'editor' && (
                 <aside className="w-80 flex-shrink-0 border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] overflow-y-auto z-20">
@@ -89,8 +91,8 @@ export default function EditorLayout() {
                                     <Save size={16} />
                                     {currentPosterId ? 'Update' : 'Save'}
                                 </button>
-                                <button onClick={triggerExport} className="px-4 py-2 bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] rounded text-sm font-medium transition-colors shadow-sm">
-                                    Export PNG
+                                <button onClick={() => triggerExport(config.exportFormat, config.exportQuality, config.exportTransparent)} className="px-4 py-2 bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] rounded text-sm font-medium transition-colors shadow-sm">
+                                    Export
                                 </button>
                             </>
                         )}

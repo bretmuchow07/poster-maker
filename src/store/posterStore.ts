@@ -9,6 +9,30 @@ export interface PosterMetadata {
   label?: string;
 }
 
+export interface PrintConfig {
+  preset: 'a4' | 'a3' | 'a2' | 'letter' | 'tabloid' | 'custom';
+  dpi: 72 | 150 | 300;
+  showBleed: boolean;
+  showMargins: boolean;
+  bleedMm: number;
+  marginMm: number;
+}
+
+export interface LabelConfig {
+  visible: boolean;
+  text: string;
+  catalogNumber: string;
+  year: string;
+  position: { left: number; top: number };
+  width: number;
+  align: 'left' | 'center' | 'right';
+}
+
+export interface FontConfig {
+  letterSpacing: number;
+  lineHeight: number;
+}
+
 export interface PosterConfig {
   width: number;
   height: number;
@@ -18,6 +42,15 @@ export interface PosterConfig {
   fontFamily: string;
   template: 'modern' | 'split' | 'minimal';
   exportTrigger: number; // Increment to trigger export
+  exportFormat?: 'png' | 'jpg' | 'pdf';
+  exportQuality?: number;
+  exportTransparent?: boolean;
+
+  // Print Settings
+  print: PrintConfig;
+
+  // Label Info
+  label: LabelConfig;
 
   // Advanced settings
   artistFontSize?: number;
@@ -27,6 +60,15 @@ export interface PosterConfig {
   artistFontWeight?: number | string;
   albumFontWeight?: number | string;
   tracklistFontWeight?: number | string;
+
+  artistLetterSpacing?: number;
+  albumLetterSpacing?: number;
+  tracklistLetterSpacing?: number;
+
+  artistLineHeight?: number;
+  albumLineHeight?: number;
+  tracklistLineHeight?: number;
+
   artistColor?: string;
   albumColor?: string;
   tracklistIndent?: number;
@@ -59,14 +101,20 @@ export interface PosterState {
   view: 'editor' | 'gallery' | 'settings';
   savedPosters: SavedPoster[];
   currentPosterId: string | null;
+  isLoading: boolean;
+  theme: 'light' | 'dark';
 
   // Actions
   setMetadata: (metadata: Partial<PosterMetadata>) => void;
   setConfig: (config: Partial<PosterConfig>) => void;
+  updatePrintConfig: (config: Partial<PrintConfig>) => void;
+  updateLabelConfig: (config: Partial<LabelConfig>) => void;
   updateTrack: (index: number, track: Partial<{ title: string; duration: string }>) => void;
   addTrack: () => void;
   removeTrack: (index: number) => void;
-  triggerExport: () => void;
+  triggerExport: (format?: 'png' | 'jpg' | 'pdf', quality?: number, transparent?: boolean) => void;
+  setLoading: (loading: boolean) => void;
+  setTheme: (theme: 'light' | 'dark') => void;
 
   // Navigation & Persistence
   setView: (view: 'editor' | 'gallery' | 'settings') => void;
@@ -87,6 +135,7 @@ export const usePosterStore = create<PosterState>()(persist((set, get) => ({
       { title: 'Track 02', duration: '4:20' },
       { title: 'Track 03', duration: '2:55' },
     ],
+    label: 'Record Label',
   },
   config: {
     width: 1080,
@@ -107,17 +156,44 @@ export const usePosterStore = create<PosterState>()(persist((set, get) => ({
     artistAlign: 'center',
     albumAlign: 'center',
     tracklistAlign: 'center',
+
+    // Defaults for new configs
+    print: {
+      preset: 'custom',
+      dpi: 72,
+      showBleed: false,
+      showMargins: false,
+      bleedMm: 3,
+      marginMm: 10
+    },
+    label: {
+      visible: false,
+      text: 'Record Label',
+      catalogNumber: 'CAT001',
+      year: '2024',
+      position: { left: 60, top: 1300 },
+      width: 200,
+      align: 'left'
+    }
   },
 
   view: 'editor',
   savedPosters: [],
   currentPosterId: null,
+  isLoading: false,
+  theme: 'light',
 
   setMetadata: (newMetadata) =>
     set((state) => ({ metadata: { ...state.metadata, ...newMetadata } })),
 
   setConfig: (newConfig) =>
     set((state) => ({ config: { ...state.config, ...newConfig } })),
+
+  updatePrintConfig: (newPrintConfig) =>
+    set((state) => ({ config: { ...state.config, print: { ...state.config.print, ...newPrintConfig } } })),
+
+  updateLabelConfig: (newLabelConfig) =>
+    set((state) => ({ config: { ...state.config, label: { ...state.config.label, ...newLabelConfig } } })),
 
   updateTrack: (index, track) =>
     set((state) => {
@@ -142,8 +218,20 @@ export const usePosterStore = create<PosterState>()(persist((set, get) => ({
       },
     })),
 
-  triggerExport: () =>
-    set((state) => ({ config: { ...state.config, exportTrigger: state.config.exportTrigger + 1 } })),
+  triggerExport: (format = 'png', quality = 1, transparent = false) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        exportTrigger: state.config.exportTrigger + 1,
+        exportFormat: format,
+        exportQuality: quality,
+        exportTransparent: transparent
+      }
+    })),
+
+  setLoading: (loading) => set({ isLoading: loading }),
+
+  setTheme: (theme) => set({ theme }),
 
   setView: (view) => set({ view }),
 
@@ -210,6 +298,7 @@ export const usePosterStore = create<PosterState>()(persist((set, get) => ({
           { title: 'Track 02', duration: '4:20' },
           { title: 'Track 03', duration: '2:55' },
         ],
+        label: 'Record Label',
       },
       config: {
         width: 1080,
@@ -219,6 +308,23 @@ export const usePosterStore = create<PosterState>()(persist((set, get) => ({
         fontFamily: 'Inter',
         template: 'modern',
         exportTrigger: 0,
+        print: {
+          preset: 'custom',
+          dpi: 72,
+          showBleed: false,
+          showMargins: false,
+          bleedMm: 3,
+          marginMm: 10
+        },
+        label: {
+          visible: false,
+          text: 'Record Label',
+          catalogNumber: 'CAT001',
+          year: '2024',
+          position: { left: 60, top: 1300 },
+          width: 200,
+          align: 'left'
+        }
       },
       view: 'editor'
     })
