@@ -201,10 +201,11 @@ export function CanvasArea() {
             const isModern = config.template === 'modern';
             const isSplit = config.template === 'split';
             const isMinimal = config.template === 'minimal';
+            const isPalette = config.template === 'palette';
 
             // 2. Create Artist and Album Objects
-            const albumAlign = config.albumAlign ?? (isModern ? 'center' : 'left');
-            const artistAlign = config.artistAlign ?? (isModern ? 'center' : 'left');
+            const albumAlign = config.albumAlign ?? (isModern ? 'center' : isPalette ? 'right' : 'left');
+            const artistAlign = config.artistAlign ?? (isModern ? 'center' : isPalette ? 'right' : 'left');
             const trackAlign = config.tracklistAlign ?? (isModern ? 'center' : 'left');
 
             const artistText = new Textbox(metadata.artist.toUpperCase(), {
@@ -237,10 +238,11 @@ export function CanvasArea() {
             const defaultPositions = {
                 modern: { artist: config.height * 0.65, album: config.height * 0.72 },
                 split: { artist: config.height * 0.55, album: config.height * 0.62 },
-                minimal: { artist: config.height * 0.6, album: config.height * 0.7 }
+                minimal: { artist: config.height * 0.6, album: config.height * 0.7 },
+                palette: { artist: config.height * 0.72, album: config.height * 0.76 }
             };
 
-            const templateDefaults = defaultPositions[isModern ? 'modern' : isSplit ? 'split' : 'minimal'];
+            const templateDefaults = defaultPositions[isModern ? 'modern' : isSplit ? 'split' : isPalette ? 'palette' : 'minimal'];
 
             // Common Horizontal Position
             const getX = (align: string) => align === 'left' ? padding : align === 'right' ? config.width - padding : config.width / 2;
@@ -248,12 +250,12 @@ export function CanvasArea() {
             artistText.set({
                 top: config.artistPosition?.top ?? templateDefaults.artist,
                 left: config.artistPosition?.left ?? getX(artistAlign),
-                fontSize: config.artistFontSize ?? (isModern ? 28 : isSplit ? 60 : 80)
+                fontSize: config.artistFontSize ?? (isModern ? 28 : isSplit ? 60 : isPalette ? 24 : 80)
             });
             albumText.set({
                 top: config.albumPosition?.top ?? templateDefaults.album,
                 left: config.albumPosition?.left ?? getX(albumAlign),
-                fontSize: config.albumFontSize ?? (isModern ? 85 : isSplit ? 40 : 30)
+                fontSize: config.albumFontSize ?? (isModern ? 85 : isSplit ? 40 : isPalette ? 52 : 30)
             });
             artistText.set({ left: getX(artistAlign) });
             albumText.set({ left: getX(albumAlign) });
@@ -322,7 +324,7 @@ export function CanvasArea() {
                     trackGroup = new Group(trackTexts, { name: 'tracklist', selectable: true });
                 }
 
-                const defaultTrackTop = isModern ? config.height * 0.81 : isSplit ? config.height * 0.7 : config.height * 0.8;
+                const defaultTrackTop = isModern ? config.height * 0.81 : isSplit ? config.height * 0.7 : isPalette ? config.height * 0.68 : config.height * 0.8;
                 trackGroup.set({
                     top: config.tracklistPosition?.top ?? defaultTrackTop,
                     left: config.tracklistPosition?.left ?? getX(trackAlign),
@@ -380,6 +382,29 @@ export function CanvasArea() {
                     name: 'pa_text'
                 });
                 canvas.add(infoText, paRect, paText);
+            }
+
+            // 4.5 Palette Color Blocks (Palette Only)
+            if (isPalette) {
+                const colors = ['#2c3e50', '#e74c3c', '#ecf0f1', '#3498db', '#2980b9']; // Placeholder palette
+                const swatchSize = 40;
+                const gap = 10;
+                const startX = config.width - padding - (5 * swatchSize) - (4 * gap);
+                const startY = config.height * 0.67;
+
+                colors.forEach((color, i) => {
+                    const rect = new Rect({
+                        left: startX + (i * (swatchSize + gap)),
+                        top: startY,
+                        width: swatchSize,
+                        height: swatchSize,
+                        fill: color, // In real implementation, this would come from the image
+                        selectable: false,
+                        // @ts-ignore
+                        name: `palette_swatch_${i}`
+                    });
+                    canvas.add(rect);
+                });
             }
 
             // 5. Label Info Block
@@ -480,6 +505,11 @@ export function CanvasArea() {
                     const size = Math.min(config.width, config.height) * 0.4;
                     const s = Math.min(size / img.width, size / img.height);
                     img.set({ scaleX: s, scaleY: s, originX: 'center', originY: 'center', left: config.width / 2, top: config.height * 0.3 });
+                } else if (config.template === 'palette') {
+                    const s = config.width / img.width;
+                    // Crop or scale to top 65%
+                    img.set({ scaleX: s, scaleY: s, originX: 'center', originY: 'top', left: config.width / 2, top: 0 });
+                    // Optional: clip to top area if needed, but simple scaling is fine for now
                 }
 
                 canvas.backgroundImage = img;
@@ -510,13 +540,13 @@ export function CanvasArea() {
     }, [config, metadata]);
 
     return (
-        <div ref={containerRef} className="w-full h-full flex items-center justify-center bg-[#f0f1f3] dark:bg-neutral-900/50 relative overflow-hidden">
+        <div ref={containerRef} className="w-full h-full flex items-center justify-center bg-[var(--background)] relative overflow-hidden transition-colors duration-300">
             {/* Zoom Controls */}
-            <div className="absolute bottom-6 right-6 flex gap-2 bg-white/80 dark:bg-neutral-800/80 backdrop-blur rounded-lg p-1 border border-neutral-200 dark:border-neutral-700 z-10 shadow-sm">
-                <button onClick={() => setZoom(z => Math.max(z * 0.9, 0.1))} className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700/50 rounded text-neutral-700 dark:text-white">-</button>
-                <span className="p-2 text-xs font-mono text-neutral-500 dark:text-neutral-400 min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
-                <button onClick={() => setZoom(z => Math.min(z * 1.1, 5))} className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700/50 rounded text-neutral-700 dark:text-white">+</button>
-                <button onClick={() => setZoom(1)} className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700/50 rounded text-neutral-700 dark:text-white px-3">Fit</button>
+            <div className="absolute bottom-6 right-6 flex gap-2 bg-[var(--surface)] backdrop-blur rounded-lg p-1 border border-[var(--border)] z-10 shadow-sm transition-all">
+                <button onClick={() => setZoom(z => Math.max(z * 0.9, 0.1))} className="p-2 hover:bg-[var(--background)] rounded text-[var(--foreground)]">-</button>
+                <span className="p-2 text-xs font-mono text-[var(--muted)] min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom(z => Math.min(z * 1.1, 5))} className="p-2 hover:bg-[var(--background)] rounded text-[var(--foreground)]">+</button>
+                <button onClick={() => setZoom(1)} className="p-2 hover:bg-[var(--background)] rounded text-[var(--foreground)] px-3">Fit</button>
             </div>
 
             <div className="w-full h-full overflow-auto flex items-center justify-center p-10">
