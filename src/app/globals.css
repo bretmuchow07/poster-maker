@@ -1,228 +1,232 @@
 @import "tailwindcss";
 
+@theme {
+  --color-deep-teal: #063f47;
+  --color-amber: #f59e0b;
+  --color-cyan: #06b6d4;
+
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
 :root {
-  /* Light Mode (Default) */
-  --background: #f0f1f3;
-  --foreground: #171717;
+  /* Light Mode Palette */
+  --background: var(--color-slate-50);
+  --surface: var(--color-slate-100);
+  --foreground: var(--color-slate-900);
+  --muted: var(--color-slate-500);
 
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #e5e5e5;
+  --primary: var(--color-deep-teal);
+  --primary-foreground: #ffffff;
 
-  --accent: #063F47;
+  --secondary: var(--color-amber);
+  --secondary-foreground: #000000;
+
+  --accent: var(--color-cyan);
   --accent-foreground: #ffffff;
 
-  --muted: #737373;
-  --muted-foreground: #a3a3a3;
+  --border: var(--color-slate-200);
+  /* For subtle separation if needed, though we prefer surface separation */
+  --shadow-color: rgba(0, 0, 0, 0.05);
 
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --card-border: #e5e5e5;
-
-  --input-bg: #ffffff;
-  --input-border: #d4d4d4;
-  --input-hover: #a3a3a3;
-
-  --button-bg: #f5f5f5;
-  --button-hover: #e5e5e5;
-  --button-active-bg: #063F47;
-  --button-active-text: #ffffff;
-
-  --grid-color: rgba(0, 0, 0, 0.05);
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --header-bg: rgba(255, 255, 255, 0.8);
-
-  --scrollbar-thumb: #d4d4d4;
-  --scrollbar-hover: #a3a3a3;
+  --radius: 0.5rem;
+  /* 8px */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --sidebar-bg: #0f0f0f;
-    --sidebar-border: #1a1a1a;
-    --card: #1f1f1f;
-    --card-foreground: #ededed;
-    --card-border: #262626;
-    --input-bg: #1a1a1a;
-    --input-border: #262626;
-    --input-hover: #404040;
-    --button-bg: #1a1a1a;
-    --button-hover: #262626;
-    --grid-color: rgba(255, 255, 255, 0.03);
-    --shadow-color: rgba(0, 0, 0, 0.5);
-    --header-bg: rgba(10, 10, 10, 0.8);
-    --scrollbar-thumb: #2a2a2a;
-    --scrollbar-hover: #404040;
+    /* Dark Mode Palette - System Default */
+    --background: var(--color-slate-950);
+    --surface: var(--color-slate-800);
+    --foreground: var(--color-slate-200);
+    --muted: var(--color-slate-400);
+
+    --border: var(--color-slate-500);
+    /* Adjusted for visibility in dark mode */
+    --shadow-color: rgba(0, 0, 0, 0.3);
   }
 }
 
-/* Explicit Dark Mode Override */
-[data-theme='dark'] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --sidebar-bg: #0f0f0f;
-  --sidebar-border: #1a1a1a;
-  --card: #1f1f1f;
-  --card-foreground: #ededed;
-  --card-border: #262626;
-  --input-bg: #1a1a1a;
-  --input-border: #262626;
-  --input-hover: #404040;
-  --button-bg: #1a1a1a;
-  --button-hover: #262626;
-  --grid-color: rgba(255, 255, 255, 0.03);
-  --shadow-color: rgba(0, 0, 0, 0.5);
-  --header-bg: rgba(10, 10, 10, 0.8);
-  --scrollbar-thumb: #2a2a2a;
-  --scrollbar-hover: #404040;
+/* Explicit Theme Overrides if class-based toggling is implemented later via ThemeProvider */
+[data-theme='light'] {
+  --background: var(--color-slate-50);
+  --surface: var(--color-slate-100);
+  --foreground: var(--color-slate-900);
+  --muted: var(--color-slate-500);
+  --shadow-color: rgba(0, 0, 0, 0.05);
 }
 
-/* Explicit Light Mode Override */
-[data-theme='light'] {
-  --background: #f0f1f3;
-  --foreground: #171717;
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #e5e5e5;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --card-border: #e5e5e5;
-  --input-bg: #ffffff;
-  --input-border: #d4d4d4;
-  --input-hover: #a3a3a3;
-  --button-bg: #f5f5f5;
-  --button-hover: #e5e5e5;
-  --grid-color: rgba(0, 0, 0, 0.05);
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --header-bg: rgba(255, 255, 255, 0.8);
-  --scrollbar-thumb: #d4d4d4;
-  --scrollbar-hover: #a3a3a3;
+[data-theme='dark'] {
+  --background: var(--color-slate-950);
+  --surface: var(--color-slate-800);
+  --foreground: var(--color-slate-200);
+  --muted: var(--color-slate-400);
+  --shadow-color: rgba(0, 0, 0, 0.3);
 }
 
 body {
+  background-color: var(--background);
   color: var(--foreground);
-  background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
-  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "Roboto", sans-serif;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Layout Structure */
-.editor-layout {
-  display: flex;
-  height: 100vh;
-  width: 100%;
-  overflow: hidden;
+/* Global Transition for smooth mode switching */
+*,
+::before,
+::after {
+  border-color: var(--border);
+  /* Set default border color */
 }
 
-/* Sidebar Styling */
-aside {
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
-  box-shadow: 2px 0 10px var(--shadow-color);
-  z-index: 10;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+/* Buttons */
+.btn-primary {
+  @apply bg-[var(--primary)] text-white hover:opacity-90 transition-all duration-200 ease-in-out shadow-sm rounded-lg px-4 py-2 font-medium;
 }
 
-/* Custom scrollbar for sidebar */
-aside::-webkit-scrollbar {
+.btn-secondary {
+  @apply bg-[var(--surface)] text-[var(--primary)] hover:bg-[var(--background)] transition-all duration-200 ease-in-out shadow-sm rounded-lg px-4 py-2 font-medium;
+}
+
+.btn-destructive {
+  @apply text-red-500 hover:text-red-600 hover:bg-red-50/10 transition-colors duration-200 ease-in-out px-4 py-2 font-medium;
+}
+
+/* Panel / Card Base */
+.panel {
+  @apply bg-[var(--surface)] rounded-xl shadow-[0_4px_20pxvar(--shadow-color)] transition-shadow duration-300;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
-aside::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-aside::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
   border-radius: 4px;
+  opacity: 0.5;
 }
 
-aside::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-hover);
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
 }
 
-/* Main workspace */
-main {
-  background: var(--background);
-  position: relative;
-  transition: background-color 0.3s ease;
+
+/* Restored Component Styles with New Tokens */
+
+/* Template & Dimension Buttons */
+.template-button,
+.dimension-button {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.2s ease;
 }
 
-/* Header styling */
+.template-button:hover,
+.dimension-button:hover {
+  border-color: var(--primary);
+  color: var(--foreground);
+}
+
+.template-button.active,
+.dimension-button.active {
+  background-color: color-mix(in srgb, var(--primary) 10%, transparent);
+  /* Tailwind v4 color-mix or opacity */
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Color Input Styling */
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 0;
+  background: transparent;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: var(--radius);
+}
+
+/* File Input */
+input[type="file"]::file-selector-button {
+  background-color: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  margin-right: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background-color: var(--background);
+  border-color: var(--muted);
+}
+
+/* Track List Remove Button */
+.remove-button {
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+
+.remove-button:hover {
+  color: var(--color-error);
+}
+
+/* Gradient Preview */
+.gradient-preview {
+  border: 1px solid var(--border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gradient-preview:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  border-color: var(--primary);
+}
+
+/* Header Styling (if used) */
 header {
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background-color: var(--header-bg);
-  border-bottom: 1px solid var(--sidebar-border);
-  box-shadow: 0 1px 3px var(--shadow-color);
-  position: relative;
-  z-index: 5;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  background-color: color-mix(in srgb, var(--background) 80%, transparent);
+  border-bottom: 1px solid var(--border);
 }
 
-header h1 {
-  color: var(--foreground);
-  letter-spacing: -0.02em;
-}
-
-[data-theme='dark'] header h1 {
-  background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-header h1 span {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Export button styling */
-header button {
-  position: relative;
-  overflow: hidden;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-header button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-header button:hover::before {
-  left: 100%;
-}
-
-header button:active {
-  transform: scale(0.98);
-}
-
-/* Canvas container */
-main>div:last-child {
-  background-image:
-    linear-gradient(var(--grid-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: -1px -1px;
-}
-
-/* Loading state */
+/* Loading State */
 .loading-state {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   color: var(--muted);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse {
@@ -237,275 +241,8 @@ main>div:last-child {
   }
 }
 
-/* Input focus glow effect */
-input:focus,
-select:focus,
-textarea:focus {
-  box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(6, 63, 71, 0.4);
-}
-
-/* Input styling with theme support */
-input[type="text"],
-input[type="number"],
-select,
-textarea {
-  background-color: var(--input-bg);
-  border-color: var(--input-border);
-  color: var(--foreground);
-}
-
-input[type="text"]:hover,
-input[type="number"]:hover,
-select:hover,
-textarea:hover {
-  border-color: var(--input-hover);
-}
-
-/* Color input styling */
-input[type="color"] {
-  -webkit-appearance: none;
-  appearance: none;
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid var(--input-border);
-}
-
-input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-input[type="color"]::-webkit-color-swatch {
-  border: none;
-  border-radius: 4px;
-}
-
-input[type="color"]::-moz-color-swatch {
-  border: none;
-  border-radius: 4px;
-}
-
-/* File input enhancement */
-input[type="file"] {
-  color: var(--foreground);
-}
-
-input[type="file"]::file-selector-button {
-  background-color: var(--button-bg);
-  color: var(--foreground);
-  border: 1px solid var(--input-border);
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-input[type="file"]::file-selector-button:hover {
-  background-color: var(--button-hover);
-}
-
-/* Button styling with theme support */
-button {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Template and dimension buttons */
-.template-button,
-.dimension-button {
-  background-color: var(--button-bg);
-  border-color: var(--input-border);
-  color: var(--muted);
-}
-
-.template-button:hover,
-.dimension-button:hover {
-  border-color: var(--input-hover);
-}
-
-.template-button.active,
-.dimension-button.active {
-  background-color: rgba(6, 63, 71, 0.1);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* Section dividers */
-section {
-  border-bottom: 1px solid var(--sidebar-border);
-  padding-bottom: 2rem;
-}
-
-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-/* Section headings */
-section h3 {
-  color: var(--muted);
-}
-
-/* Labels */
-label {
-  color: var(--muted-foreground);
-}
-
-/* Button hover effects */
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-button:active:not(:disabled) {
-  transform: translateY(0);
-  transition-duration: 0.05s;
-}
-
-/* Selection styling */
-::selection {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-/* Focus visible for accessibility */
+/* Focus States */
 *:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
-  border-radius: 2px;
-}
-
-*:focus:not(:focus-visible) {
-  outline: none;
-}
-
-/* Gradient backgrounds for gradient buttons */
-.gradient-preview {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid var(--input-border);
-}
-
-.gradient-preview:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px var(--shadow-color);
-}
-
-.gradient-preview:active {
-  transform: scale(1.05);
-}
-
-/* Scrollbar for main canvas area */
-main>div:last-child::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-main>div:last-child::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-main>div:last-child::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 5px;
-  border: 2px solid var(--background);
-}
-
-main>div:last-child::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-hover);
-}
-
-/* General scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-hover);
-}
-
-/* Track number styling */
-.track-number {
-  color: var(--muted);
-}
-
-/* Remove button styling */
-.remove-button {
-  color: var(--muted);
-  transition: color 0.15s ease;
-}
-
-.remove-button:hover {
-  color: #ef4444;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  aside {
-    width: 280px;
-  }
-}
-
-@media (max-width: 768px) {
-  aside {
-    position: absolute;
-    left: -320px;
-    height: 100%;
-    width: 320px;
-    transition: left 0.3s ease;
-    z-index: 50;
-  }
-
-  aside.open {
-    left: 0;
-    box-shadow: 4px 0 20px var(--shadow-color);
-  }
-}
-
-/* Utility animations */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Prevent text selection on UI elements */
-header,
-aside button,
-aside label {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Smooth theme transitions */
-* {
-  transition-property: background-color, border-color, color;
-  transition-duration: 0.3s;
-  transition-timing-function: ease;
-}
-
-/* Exclude transitions for specific properties */
-button,
-input,
-select,
-textarea {
-  transition-property: all;
 }

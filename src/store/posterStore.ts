@@ -38,9 +38,13 @@ export interface PosterConfig {
   height: number;
   backgroundColor: string;
   backgroundImage?: string; // Data URL or Object URL
+  imageScale?: number;
+  imageOffsetX?: number;
+  imageOffsetY?: number;
+  imageOpacity?: number;
   textColor: string;
   fontFamily: string;
-  template: 'modern' | 'split' | 'minimal';
+  template: 'modern' | 'split' | 'minimal' | 'palette';
   exportTrigger: number; // Increment to trigger export
   exportFormat?: 'png' | 'jpg' | 'pdf';
   exportQuality?: number;
@@ -141,6 +145,10 @@ export const usePosterStore = create<PosterState>()(persist((set, get) => ({
     width: 1080,
     height: 1350, // 4:5 Aspect Ratio (IG Portrait)
     backgroundColor: '#ffffff',
+    imageScale: 1,
+    imageOffsetX: 0,
+    imageOffsetY: 0,
+    imageOpacity: 1,
     textColor: '#000000',
     fontFamily: 'Inter',
     template: 'modern',
@@ -304,6 +312,10 @@ export const usePosterStore = create<PosterState>()(persist((set, get) => ({
         width: 1080,
         height: 1350,
         backgroundColor: '#ffffff',
+        imageScale: 1,
+        imageOffsetX: 0,
+        imageOffsetY: 0,
+        imageOpacity: 1,
         textColor: '#000000',
         fontFamily: 'Inter',
         template: 'modern',
