@@ -1,77 +1,96 @@
 @import "tailwindcss";
 
 @theme {
-  --color-deep-teal: #063f47;
-  --color-amber: #f59e0b;
-  --color-cyan: #06b6d4;
-
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-400: #94a3b8;
-  --color-slate-500: #64748b;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+  --color-gunmetal: #01242D;
+  --color-caribbean: #3E6B75;
+  --color-persian-orange: #E29860;
+  --color-brown: #A55316;
+  --color-bistre: #2F1D15;
 
   --color-success: #10b981;
-  --color-warning: #f59e0b;
+  --color-warning: #E29860;
+  /* Mapped to Persian Orange for consistency if needed, or keep standard warning */
   --color-error: #ef4444;
 }
 
 :root {
   /* Light Mode Palette */
-  --background: var(--color-slate-50);
-  --surface: var(--color-slate-100);
-  --foreground: var(--color-slate-900);
-  --muted: var(--color-slate-500);
+  --background: #F0F4F5;
+  /* Custom light tint */
+  --surface: #FFFFFF;
+  --foreground: var(--color-bistre);
+  --muted: var(--color-caribbean);
+  /* Using Caribbean as a muted tone in light mode */
 
-  --primary: var(--color-deep-teal);
+  --primary: var(--color-caribbean);
   --primary-foreground: #ffffff;
 
-  --secondary: var(--color-amber);
-  --secondary-foreground: #000000;
+  --secondary: var(--color-persian-orange);
+  --secondary-foreground: #ffffff;
 
-  --accent: var(--color-cyan);
+  --accent: var(--color-brown);
   --accent-foreground: #ffffff;
 
-  --border: var(--color-slate-200);
-  /* For subtle separation if needed, though we prefer surface separation */
-  --shadow-color: rgba(0, 0, 0, 0.05);
+  --border: color-mix(in srgb, var(--color-gunmetal) 15%, transparent);
+  --shadow-color: rgba(1, 36, 45, 0.08);
+  /* Gunmetal shadow */
 
   --radius: 0.5rem;
-  /* 8px */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark Mode Palette - System Default */
-    --background: var(--color-slate-950);
-    --surface: var(--color-slate-800);
-    --foreground: var(--color-slate-200);
-    --muted: var(--color-slate-400);
+    /* Dark Mode Palette - Gunmetal Theme */
+    --background: var(--color-gunmetal);
+    --surface: color-mix(in srgb, var(--color-gunmetal) 85%, white);
+    --foreground: #E2E8F0;
+    /* Slate-200 for readability */
+    --muted: color-mix(in srgb, var(--color-caribbean) 70%, transparent);
 
-    --border: var(--color-slate-500);
-    /* Adjusted for visibility in dark mode */
-    --shadow-color: rgba(0, 0, 0, 0.3);
+    --primary: var(--color-persian-orange);
+    --primary-foreground: #ffffff;
+
+    --secondary: var(--color-caribbean);
+    --secondary-foreground: #ffffff;
+
+    --accent: var(--color-brown);
+
+    --border: color-mix(in srgb, var(--color-caribbean) 30%, transparent);
+    --shadow-color: rgba(0, 0, 0, 0.4);
   }
 }
 
-/* Explicit Theme Overrides if class-based toggling is implemented later via ThemeProvider */
+/* Explicit Theme Overrides */
 [data-theme='light'] {
-  --background: var(--color-slate-50);
-  --surface: var(--color-slate-100);
-  --foreground: var(--color-slate-900);
-  --muted: var(--color-slate-500);
-  --shadow-color: rgba(0, 0, 0, 0.05);
+  --background: #F0F4F5;
+  --surface: #FFFFFF;
+  --foreground: var(--color-bistre);
+  --muted: var(--color-caribbean);
+
+  --primary: var(--color-caribbean);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--color-persian-orange);
+  --secondary-foreground: #ffffff;
+
+  --border: color-mix(in srgb, var(--color-gunmetal) 15%, transparent);
+  --shadow-color: rgba(1, 36, 45, 0.08);
 }
 
 [data-theme='dark'] {
-  --background: var(--color-slate-950);
-  --surface: var(--color-slate-800);
-  --foreground: var(--color-slate-200);
-  --muted: var(--color-slate-400);
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  --background: var(--color-gunmetal);
+  --surface: color-mix(in srgb, var(--color-gunmetal) 85%, white);
+  --foreground: #E2E8F0;
+  --muted: color-mix(in srgb, var(--color-caribbean) 70%, transparent);
+
+  --primary: var(--color-persian-orange);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--color-caribbean);
+  --secondary-foreground: #ffffff;
+
+  --border: color-mix(in srgb, var(--color-caribbean) 30%, transparent);
+  --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
 body {
