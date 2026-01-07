@@ -9,7 +9,7 @@ export function Footer() {
                     <a href="#" className="hover:text-neutral-400 transition-colors">
                         GitHub
                     </a>
-                    <a href="#" className="hover:text-neutral-400 transition-colors">
+                    <a href="https://github.com/bretmuchow07/poster-maker" className="hover:text-neutral-400 transition-colors">
                         License
                     </a>
                     <Link href="/privacy" className="hover:text-neutral-400 transition-colors">

@@ -31,7 +31,7 @@ export function OpenSourceSection() {
                 </div>
 
                 <a
-                    href="#"
+                    href="https://github.com/bretmuchow07/poster-maker"
                     className="inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors border-b border-neutral-700 hover:border-white pb-1"
                 >
                     <Github className="w-4 h-4" />
