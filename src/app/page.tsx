@@ -1,25 +1,24 @@
-import React from 'react'
-import { HeroSection } from '@/components/landing/HeroSection'
-import { VisualShowcase } from '@/components/landing/VisualShowcase'
-import { FeaturesGrid } from '@/components/landing/FeaturesGrid'
-import { PrintQualitySection } from '@/components/landing/PrintQualitySection'
-import { OpenSourceSection } from '@/components/landing/OpenSourceSection'
-import { WhoItsFor } from '@/components/landing/WhoItsFor'
-import { FinalCTA } from '@/components/landing/FinalCTA'
-import { Footer } from '@/components/landing/Footer'
+import React from 'react';
+import { Header } from '@/components/landing/Header';
+import { HeroSection } from '@/components/landing/HeroSection';
+import { TemplateShowcase } from '@/components/landing/TemplateShowcase';
+import { FeaturesSection } from '@/components/landing/FeaturesSection';
+import { PrintSpecsSection } from '@/components/landing/PrintSpecsSection';
+import { FAQSection } from '@/components/landing/FAQSection';
+import { FinalCTA } from '@/components/landing/FinalCTA';
+import { Footer } from '@/components/landing/Footer';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-amber-500/30 selection:text-amber-200">
+    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[var(--accent-foreground)] transition-colors duration-200">
+      <Header />
       <HeroSection />
-      <VisualShowcase />
-      <FeaturesGrid />
-      <PrintQualitySection />
-      <OpenSourceSection />
-      <WhoItsFor />
+      <TemplateShowcase />
+      <FeaturesSection />
+      <PrintSpecsSection />
+      <FAQSection />
       <FinalCTA />
       <Footer />
     </main>
-  )
+  );
 }
-

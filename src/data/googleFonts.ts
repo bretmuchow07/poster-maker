@@ -1,3 +1,37 @@
+export interface CuratedFontCategory {
+    id: string;
+    label: string;
+    description: string;
+    fonts: string[];
+}
+
+export const CURATED_FONT_CATEGORIES: CuratedFontCategory[] = [
+    {
+        id: 'swiss',
+        label: 'Swiss & Clean',
+        description: 'Neutral, objective, high-legibility grotesks for iconic layouts',
+        fonts: ['Inter', 'Space Grotesk', 'Work Sans', 'DM Sans', 'Manrope', 'Montserrat', 'Public Sans', 'Barlow', 'Karla']
+    },
+    {
+        id: 'display',
+        label: 'Concert & Display',
+        description: 'Bold, condensed, and punchy headline typefaces',
+        fonts: ['Bebas Neue', 'Anton', 'Archivo Black', 'Oswald', 'Staatliches', 'Teko', 'Righteous', 'Russo One', 'Fjalla One']
+    },
+    {
+        id: 'editorial',
+        label: 'Editorial & Vinyl Serif',
+        description: 'Timeless, elegant serifs for jazz, classical, and indie sleeves',
+        fonts: ['Playfair Display', 'Cormorant Garamond', 'DM Serif Display', 'Cinzel', 'Libre Baskerville', 'EB Garamond', 'Lora', 'Spectral', 'Prata']
+    },
+    {
+        id: 'mono',
+        label: 'Technical & Mono',
+        description: 'Industrial, structured monospaces for electronic and ambient genres',
+        fonts: ['Space Mono', 'IBM Plex Mono', 'Source Code Pro', 'Roboto Mono', 'Inconsolata', 'Chakra Petch']
+    }
+];
+
 export const GOOGLE_FONTS = [
     "Abel", "Abril Fatface", "Acme", "Alegreya", "Alegreya Sans", "Anton", "Archivo", "Archivo Black",
     "Archivo Narrow", "Arimo", "Arvo", "Asap", "Asap Condensed", "Assistant", "Barlow", "Barlow Condensed",

@@ -1,29 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { usePosterStore } from '@/store/posterStore';
-import { Moon, Sun, Monitor, Trash2 } from 'lucide-react';
+import { Moon, Sun, Trash2 } from 'lucide-react';
 
 export function Settings() {
-    const { setView } = usePosterStore();
-    const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-
-    useEffect(() => {
-        const stored = localStorage.getItem('theme') as any;
-        if (stored) setTheme(stored);
-    }, []);
-
-    const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-        setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-
-        const root = document.documentElement;
-        if (newTheme === 'system') {
-            root.removeAttribute('data-theme');
-        } else {
-            root.setAttribute('data-theme', newTheme);
-        }
-    };
+    const { theme, setTheme } = usePosterStore();
 
     return (
         <div className="p-8 w-full max-w-2xl mx-auto">
@@ -35,25 +17,20 @@ export function Settings() {
                     <h3 className="text-xl font-semibold text-[var(--foreground)]">Appearance</h3>
                     <div className="flex gap-4">
                         <button
-                            onClick={() => handleThemeChange('light')}
-                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all w-32 ${theme === 'light' ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--sidebar-bg)] text-[var(--muted-foreground)]'}`}
+                            type="button"
+                            onClick={() => setTheme('light')}
+                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all w-32 cursor-pointer ${theme === 'light' ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--sidebar-bg)] text-[var(--muted-foreground)]'}`}
                         >
                             <Sun size={24} />
                             <span className="text-xs font-medium">Light</span>
                         </button>
                         <button
-                            onClick={() => handleThemeChange('dark')}
-                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all w-32 ${theme === 'dark' ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--sidebar-bg)] text-[var(--muted-foreground)]'}`}
+                            type="button"
+                            onClick={() => setTheme('dark')}
+                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all w-32 cursor-pointer ${theme === 'dark' ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--sidebar-bg)] text-[var(--muted-foreground)]'}`}
                         >
                             <Moon size={24} />
                             <span className="text-xs font-medium">Dark</span>
-                        </button>
-                        <button
-                            onClick={() => handleThemeChange('system')}
-                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all w-32 ${theme === 'system' ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-[var(--card-border)] bg-[var(--card)] hover:bg-[var(--sidebar-bg)] text-[var(--muted-foreground)]'}`}
-                        >
-                            <Monitor size={24} />
-                            <span className="text-xs font-medium">System</span>
                         </button>
                     </div>
                 </section>
@@ -67,13 +44,14 @@ export function Settings() {
                             <p className="text-sm text-[var(--muted)]">Clear all local data and saved posters.</p>
                         </div>
                         <button
+                            type="button"
                             onClick={() => {
                                 if (confirm('Are you sure? This will delete all your posters.')) {
                                     localStorage.clear();
                                     window.location.reload();
                                 }
                             }}
-                            className="text-red-500 hover:bg-red-500/10 px-4 py-2 rounded transition-colors flex items-center gap-2"
+                            className="text-red-500 hover:bg-red-500/10 px-4 py-2 rounded transition-colors flex items-center gap-2 cursor-pointer"
                         >
                             <Trash2 size={16} />
                             Reset Data
