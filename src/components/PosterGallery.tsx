@@ -2,81 +2,133 @@
 
 import React from 'react';
 import { usePosterStore } from '@/store/posterStore';
-import { Trash2, Edit, Plus } from 'lucide-react';
+import { Trash2, Edit, Plus, Image as ImageIcon } from 'lucide-react';
 
 export function PosterGallery() {
     const { savedPosters, loadPoster, deletePoster, createNewPoster } = usePosterStore();
 
     return (
-        <div className="p-8 w-full max-w-6xl mx-auto">
+        <div className="p-8 w-full max-w-6xl mx-auto animate-fade-in">
             <div className="flex justify-between items-center mb-8">
-                <h2 className="text-3xl font-bold text-[var(--foreground)]">Saved Posters</h2>
+                <div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] tracking-tight">Saved Posters</h2>
+                    <p className="text-xs text-[var(--muted)] mt-1">Stored securely on your device in browser LocalStorage</p>
+                </div>
                 <button
                     onClick={createNewPoster}
-                    className="flex items-center gap-2 bg-[var(--accent)] text-[var(--accent-foreground)] px-4 py-2 rounded shadow hover:opacity-90 transition-opacity"
+                    className="btn btn-primary shadow-sm"
                 >
-                    <Plus size={18} />
-                    Create New
+                    <Plus size={16} />
+                    <span>Create New Poster</span>
                 </button>
             </div>
 
             {savedPosters.length === 0 ? (
-                <div className="text-center py-20 bg-[var(--card)] border border-[var(--card-border)] rounded-xl">
-                    <p className="text-[var(--muted)] mb-4">No saved posters yet.</p>
+                <div className="text-center py-20 bg-[var(--surface)] border border-[var(--border-color)] rounded-2xl shadow-xs">
+                    <div className="w-12 h-12 rounded-full bg-[var(--surface2)] flex items-center justify-center mx-auto mb-3 text-[var(--accent)]">
+                        <ImageIcon size={22} />
+                    </div>
+                    <h3 className="font-semibold text-[var(--foreground)] text-base mb-1">No saved posters yet</h3>
+                    <p className="text-xs text-[var(--muted)] mb-5 max-w-sm mx-auto">
+                        Your designs will appear here when you click Save in the studio editor.
+                    </p>
                     <button
                         onClick={createNewPoster}
-                        className="text-[var(--accent)] hover:underline"
+                        className="btn btn-primary"
                     >
-                        Start your first design
+                        Start Your First Poster
                     </button>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {savedPosters.map((poster) => (
-                        <div key={poster.id} className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
-                            {/* Visual Preview (Simplified as text for now) */}
+                        <div
+                            key={poster.id}
+                            className="bg-[var(--surface)] border border-[var(--border-color)] rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all group flex flex-col"
+                        >
+                            {/* Visual Preview Card */}
                             <div
-                                className="h-48 w-full flex flex-col items-center justify-center p-4 text-center"
-                                style={{ background: poster.config.backgroundColor.startsWith('linear') ? poster.config.backgroundColor : poster.config.backgroundColor }}
+                                className="h-56 w-full relative flex flex-col items-center justify-between p-4 overflow-hidden"
+                                style={{
+                                    background: poster.config.backgroundColor?.startsWith('linear')
+                                        ? poster.config.backgroundColor
+                                        : poster.config.backgroundColor || '#ffffff'
+                                }}
                             >
-                                <h3
-                                    className="font-bold text-xl mb-1 truncate w-full"
-                                    style={{ color: poster.config.textColor, fontFamily: poster.config.fontFamily }}
-                                >
-                                    {poster.metadata.album}
-                                </h3>
-                                <p
-                                    className="text-sm truncate w-full"
-                                    style={{ color: poster.config.textColor, fontFamily: poster.config.fontFamily, opacity: 0.8 }}
-                                >
-                                    {poster.metadata.artist}
-                                </p>
+                                {poster.config.backgroundImage ? (
+                                    <div className="relative w-full h-36 rounded-md overflow-hidden shadow-xs border border-black/10">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={poster.config.backgroundImage}
+                                            alt={poster.metadata.album || 'Poster Cover'}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-32 rounded-md bg-black/5 dark:bg-white/5 flex items-center justify-center border border-dashed border-black/10">
+                                        <span className="text-[11px] font-mono text-[var(--muted)]">Minimal Typographic</span>
+                                    </div>
+                                )}
+
+                                <div className="w-full text-center mt-2">
+                                    <h3
+                                        className="font-bold text-sm truncate w-full"
+                                        style={{
+                                            color: poster.config.textColor || '#18181b',
+                                            fontFamily: poster.config.fontFamily || 'sans-serif'
+                                        }}
+                                    >
+                                        {poster.metadata.album || 'Untitled Album'}
+                                    </h3>
+                                    <p
+                                        className="text-xs truncate w-full opacity-80"
+                                        style={{
+                                            color: poster.config.textColor || '#18181b',
+                                            fontFamily: poster.config.fontFamily || 'sans-serif'
+                                        }}
+                                    >
+                                        {poster.metadata.artist || 'Artist Name'}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="p-4 bg-[var(--card)]">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h4 className="font-semibold text-[var(--foreground)] truncate max-w-[180px]">{poster.name}</h4>
-                                        <span className="text-xs text-[var(--muted)]">
-                                            {new Date(poster.lastModified).toLocaleDateString()}
+                            {/* Card Footer Meta */}
+                            <div className="p-3.5 bg-[var(--surface)] border-t border-[var(--border-color)] flex items-center justify-between mt-auto">
+                                <div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--surface2)] text-[var(--text2)]">
+                                            {poster.config.print?.preset || 'A3'}
+                                        </span>
+                                        <span className="text-[10px] text-[var(--muted)]">
+                                            {poster.metadata.tracks?.length || 0} tracks
                                         </span>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => deletePoster(poster.id)}
-                                            className="p-2 text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => loadPoster(poster.id)}
-                                            className="p-2 bg-[var(--accent)] text-[var(--accent-foreground)] rounded hover:opacity-90 transition-opacity"
-                                            title="Open Editor"
-                                        >
-                                            <Edit size={16} />
-                                        </button>
+                                    <div className="text-[10px] text-[var(--muted)] mt-1">
+                                        {new Date(poster.lastModified).toLocaleDateString()}
                                     </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        onClick={() => {
+                                            if (confirm(`Delete "${poster.name || 'this poster'}"?`)) {
+                                                deletePoster(poster.id);
+                                            }
+                                        }}
+                                        className="p-1.5 text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+                                        title="Delete poster"
+                                        aria-label="Delete poster"
+                                    >
+                                        <Trash2 size={15} />
+                                    </button>
+                                    <button
+                                        onClick={() => loadPoster(poster.id)}
+                                        className="btn btn-primary py-1 px-2.5 text-xs"
+                                        title="Open in studio editor"
+                                    >
+                                        <Edit size={13} />
+                                        <span>Edit</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -1,15 +1,35 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Canvas, Textbox, Group, Text, Rect, Image as FabricImage, Gradient, FabricObject } from 'fabric';
+import { Canvas, Textbox, Text, Rect, Group, Image as FabricImage, Gradient, FabricObject, filters } from 'fabric';
 import { usePosterStore } from '@/store/posterStore';
+import { applyImageEdgeFade } from '@/utils/imageUtils';
 import { saveAs } from 'file-saver';
+
+function hexToRgba(hex: string, alpha: number): string {
+    if (!hex) return `rgba(255, 255, 255, ${alpha})`;
+    if (hex.startsWith('linear-gradient')) {
+        const match = hex.match(/#[a-fA-F0-9]{3,6}/);
+        if (match) return hexToRgba(match[0], alpha);
+        return `rgba(24, 24, 27, ${alpha})`;
+    }
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    if (c.length !== 6) return `rgba(255, 255, 255, ${alpha})`;
+    const num = parseInt(c, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export function CanvasArea() {
     const { config, metadata } = usePosterStore();
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<Canvas | null>(null);
+    const prevExportTrigger = useRef<number>(config.exportTrigger);
+    const cachedFadedImage = useRef<{ key: string; src: string }>({ key: '', src: '' });
     const [scale, setScale] = useState(1);
     const [zoom, setZoom] = useState(1);
 
@@ -22,9 +42,61 @@ export function CanvasArea() {
             backgroundColor: config.backgroundColor,
             preserveObjectStacking: true,
             selection: true,
+            clipPath: new Rect({
+                left: 0,
+                top: 0,
+                width: config.width,
+                height: config.height,
+                originX: 'left',
+                originY: 'top',
+                selectable: false,
+                evented: false
+            })
         });
+
+        // Listen for direct on-canvas image & text manipulation
+        const handleObjectModified = (e: any) => {
+            const target = e.target;
+            if (!target) return;
+
+            if (target.name === 'poster_image') {
+                const baseLeft = target.data?.baseLeft ?? (config.width / 2);
+                const baseTop = target.data?.baseTop ?? 0;
+                const baseScale = target.data?.baseScale ?? 1;
+
+                const newOffsetX = Math.round((target.left || 0) - baseLeft);
+                const newOffsetY = Math.round((target.top || 0) - baseTop);
+                const newScale = Math.round(((target.scaleX || baseScale) / baseScale) * 100) / 100;
+
+                usePosterStore.getState().setConfig({
+                    imageOffsetX: newOffsetX,
+                    imageOffsetY: newOffsetY,
+                    imageScale: newScale
+                });
+            } else if (target.name === 'artist') {
+                usePosterStore.getState().setConfig({
+                    artistPosition: { left: Math.round(target.left || 0), top: Math.round(target.top || 0) }
+                });
+            } else if (target.name === 'album') {
+                usePosterStore.getState().setConfig({
+                    albumPosition: { left: Math.round(target.left || 0), top: Math.round(target.top || 0) }
+                });
+            } else if (target.name === 'tracklist' || target.name === 'palette_tracklist' || target.name === 'inline_tracks' || target.name === 'tracklist_col1') {
+                usePosterStore.getState().setConfig({
+                    tracklistPosition: { left: Math.round(target.left || 0), top: Math.round(target.top || 0) }
+                });
+            } else if (target.name === 'swatches_group') {
+                usePosterStore.getState().setConfig({
+                    swatchesPosition: { left: Math.round(target.left || 0), top: Math.round(target.top || 0) }
+                });
+            }
+        };
+
+        canvas.on('object:modified', handleObjectModified);
         fabricRef.current = canvas;
+
         return () => {
+            canvas.off('object:modified', handleObjectModified);
             canvas.dispose();
             fabricRef.current = null;
         };
@@ -93,7 +165,6 @@ export function CanvasArea() {
         const canvas = fabricRef.current;
 
         try {
-            // Deselect any active objects
             canvas.discardActiveObject();
 
             // Hide guides for export
@@ -103,22 +174,18 @@ export function CanvasArea() {
             });
 
             canvas.renderAll();
-
-            // Wait for render to complete
             await new Promise(resolve => setTimeout(resolve, 150));
 
             const { width, height } = config;
             const format = config.exportFormat || 'png';
             const quality = config.exportQuality || 1;
-            const multiplier = 2; // High res export
-
+            const dpi = config.print?.dpi || 72;
+            const multiplier = dpi === 300 ? 4 : dpi === 150 ? 2 : 1;
             const filename = `poster-${(metadata.album || 'untitled').toLowerCase().replace(/\s+/g, '-')}`;
 
             if (format === 'pdf') {
                 const { jsPDF } = await import('jspdf');
-
-                // Use Fabric.js canvas for high-quality export
-                const imgData = canvas.toDataURL({ format: 'png', quality: 1, multiplier: multiplier });
+                const imgData = canvas.toDataURL({ format: 'png', quality: 1, multiplier });
 
                 const pdf = new jsPDF({
                     orientation: width > height ? 'landscape' : 'portrait',
@@ -128,13 +195,8 @@ export function CanvasArea() {
 
                 pdf.addImage(imgData, 'PNG', 0, 0, width * multiplier, height * multiplier);
                 pdf.save(`${filename}.pdf`);
-
-                console.log('PDF exported successfully');
             } else {
-                // Use Fabric.js canvas for high-quality export
-                const dataURL = canvas.toDataURL({ format: format as any, quality: quality, multiplier: multiplier });
-
-                // Convert DataURL to Blob
+                const dataURL = canvas.toDataURL({ format: format as any, quality, multiplier });
                 const arr = dataURL.split(',');
                 // @ts-ignore
                 const mime = arr[0].match(/:(.*?);/)?.[1] || (format === 'jpg' ? 'image/jpeg' : 'image/png');
@@ -145,54 +207,49 @@ export function CanvasArea() {
                     u8arr[n] = bstr.charCodeAt(n);
                 }
                 const blob = new Blob([u8arr], { type: mime });
-
-                // Trigger download
                 saveAs(blob, `${filename}.${format}`);
-
-                console.log(`${format.toUpperCase()} exported successfully`);
             }
 
-            // Restore guides
             guides.forEach(g => {
                 g.visible = true;
             });
             canvas.renderAll();
-
         } catch (error) {
             console.error('Export failed:', error);
-            alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
-
-            // Restore guides in case of error
-            try {
-                const guides = canvas.getObjects().filter(obj => (obj as any).id === 'guide');
-                guides.forEach(g => {
-                    g.visible = true;
-                });
-                canvas.renderAll();
-            } catch (e) {
-                console.error('Failed to restore guides:', e);
-            }
+            alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}.`);
         }
     };
 
-    // Trigger Export Effect
+    // Trigger Export Effect with guard against auto-export on reload
     useEffect(() => {
-        if (config.exportTrigger > 0) handleExport();
+        if (config.exportTrigger > 0 && config.exportTrigger !== prevExportTrigger.current) {
+            prevExportTrigger.current = config.exportTrigger;
+            handleExport();
+        }
     }, [config.exportTrigger]);
 
     // Main Render Loop
     useEffect(() => {
         if (!fabricRef.current) return;
         const canvas = fabricRef.current;
-
-        // 1. Sync Dimensions and Background
         canvas.setDimensions({ width: config.width, height: config.height });
+        canvas.clipPath = new Rect({
+            left: 0,
+            top: 0,
+            width: config.width,
+            height: config.height,
+            originX: 'left',
+            originY: 'top',
+            selectable: false,
+            evented: false
+        });
+        handleBackgroundColor(canvas, config.backgroundColor);
 
-        const renderTextAndBranding = () => {
-            // Clear all objects except background image
+        const renderTextAndBranding = (loadedImg?: FabricImage) => {
+            // Keep the image and clear other objects
             const objects = canvas.getObjects();
             objects.forEach(obj => {
-                if (obj !== canvas.backgroundImage) {
+                if ((obj as any).name !== 'poster_image') {
                     canvas.remove(obj);
                 }
             });
@@ -203,246 +260,492 @@ export function CanvasArea() {
             const isMinimal = config.template === 'minimal';
             const isPalette = config.template === 'palette';
 
-            // 2. Create Artist and Album Objects
-            const albumAlign = config.albumAlign ?? (isModern ? 'center' : isPalette ? 'right' : 'left');
-            const artistAlign = config.artistAlign ?? (isModern ? 'center' : isPalette ? 'right' : 'left');
-            const trackAlign = config.tracklistAlign ?? (isModern ? 'center' : 'left');
-
-            const artistText = new Textbox(metadata.artist.toUpperCase(), {
-                // @ts-ignore
-                name: 'artist',
-                fontFamily: config.fontFamily || 'Inter',
-                fill: config.artistColor || config.textColor || '#000000',
-                fontWeight: config.artistFontWeight || 700,
-                textAlign: artistAlign,
-                originX: artistAlign,
-                selectable: true,
-                width: config.width - padding * 2,
-                splitByGrapheme: true
-            });
-
-            const albumText = new Textbox(metadata.album.toUpperCase(), {
-                // @ts-ignore
-                name: 'album',
-                fontFamily: config.fontFamily || 'Inter',
-                fill: config.albumColor || config.textColor || '#000000',
-                fontWeight: config.albumFontWeight || 800,
-                textAlign: albumAlign,
-                originX: albumAlign,
-                selectable: true,
-                width: config.width - padding * 2,
-                splitByGrapheme: true
-            });
-
-            // Position based on template or overrides
-            const defaultPositions = {
-                modern: { artist: config.height * 0.65, album: config.height * 0.72 },
-                split: { artist: config.height * 0.55, album: config.height * 0.62 },
-                minimal: { artist: config.height * 0.6, album: config.height * 0.7 },
-                palette: { artist: config.height * 0.72, album: config.height * 0.76 }
-            };
-
-            const templateDefaults = defaultPositions[isModern ? 'modern' : isSplit ? 'split' : isPalette ? 'palette' : 'minimal'];
-
-            // Common Horizontal Position
-            const getX = (align: string) => align === 'left' ? padding : align === 'right' ? config.width - padding : config.width / 2;
-
-            artistText.set({
-                top: config.artistPosition?.top ?? templateDefaults.artist,
-                left: config.artistPosition?.left ?? getX(artistAlign),
-                fontSize: config.artistFontSize ?? (isModern ? 28 : isSplit ? 60 : isPalette ? 24 : 80)
-            });
-            albumText.set({
-                top: config.albumPosition?.top ?? templateDefaults.album,
-                left: config.albumPosition?.left ?? getX(albumAlign),
-                fontSize: config.albumFontSize ?? (isModern ? 85 : isSplit ? 40 : isPalette ? 52 : 30)
-            });
-            artistText.set({ left: getX(artistAlign) });
-            albumText.set({ left: getX(albumAlign) });
-
-            // Prevent text overlapping image
-            if (isModern && canvas.backgroundImage) {
-                const img = canvas.backgroundImage;
-                const imageBottom = (img.top || 0) + (img.height || 0) * (img.scaleY || 1);
-                const minGap = 10;
-                if (artistText.top < imageBottom + minGap) {
-                    artistText.set({ top: imageBottom + minGap });
-                }
-                if (albumText.top < imageBottom + minGap) {
-                    albumText.set({ top: imageBottom + minGap });
-                }
-            }
-
-            canvas.add(artistText, albumText);
-
-            // Prevent overlapping: adjust positions if necessary
-            const artistBounds = artistText.getBoundingRect();
-            const albumBounds = albumText.getBoundingRect();
-            const minGap = 10; // minimum gap between elements
-
-            if (albumBounds.top < artistBounds.top + artistBounds.height + minGap) {
-                albumText.set({ top: artistBounds.top + artistBounds.height + minGap });
-                albumText.setCoords();
-            }
-
-            // 3. Tracklist Logic
-            const trackFontSize = isModern ? (config.tracklistFontSize ?? 14) : 24;
-            const spacing = trackFontSize + 4;
-            const indent = config.tracklistIndent ?? 0;
-
-            const trackTexts = metadata.tracks.map((track, i) => {
-                const num = String(i + 1).padStart(2, '0');
-                const trackWidth = isModern && metadata.tracks.length > 11
-                    ? (config.width - padding * 2) * 0.45
-                    : (config.width - padding * 2);
-
-                return new Textbox(`${num}. ${track.title.toUpperCase()}`, {
-                    fontSize: trackFontSize,
-                    fontFamily: config.fontFamily,
-                    fill: config.textColor,
-                    fontWeight: config.tracklistFontWeight || 600,
-                    top: i * spacing,
-                    left: indent,
-                    width: trackWidth,
-                    splitByGrapheme: true
-                });
-            });
-
-            if (trackTexts.length > 0) {
-                let trackGroup;
-                if (isModern && trackTexts.length > 11) {
-                    const midpoint = Math.ceil(trackTexts.length / 2);
-                    const col1 = trackTexts.slice(0, midpoint);
-                    const col2 = trackTexts.slice(midpoint).map((t, idx) => {
-                        t.set({ top: idx * spacing, left: (config.width - padding * 2) * 0.5 + indent });
-                        return t;
-                    });
-                    // @ts-ignore
-                    trackGroup = new Group([...col1, ...col2], { name: 'tracklist', selectable: true });
-                } else {
-                    // @ts-ignore
-                    trackGroup = new Group(trackTexts, { name: 'tracklist', selectable: true });
-                }
-
-                const defaultTrackTop = isModern ? config.height * 0.81 : isSplit ? config.height * 0.7 : isPalette ? config.height * 0.68 : config.height * 0.8;
-                trackGroup.set({
-                    top: config.tracklistPosition?.top ?? defaultTrackTop,
-                    left: config.tracklistPosition?.left ?? getX(trackAlign),
-                    originX: trackAlign
-                });
-                canvas.add(trackGroup);
-
-                // Prevent tracklist overlapping album
-                const albumBounds = albumText.getBoundingRect();
-                const trackBounds = trackGroup.getBoundingRect();
-                if (trackBounds.top < albumBounds.top + albumBounds.height + minGap) {
-                    trackGroup.set({ top: albumBounds.top + albumBounds.height + minGap });
-                    trackGroup.setCoords();
-                }
-            }
-
-            // 4. Branding (Modern Only)
-            if (isModern) {
-                const infoText = new Text(`ALBUM • ${metadata.year}`, {
-                    left: config.width - padding,
-                    top: config.height - padding - 75,
-                    fontSize: 18,
-                    fontFamily: config.fontFamily,
-                    fill: config.textColor,
-                    fontWeight: 800,
-                    originX: 'right',
-                    // @ts-ignore
-                    name: 'metadata_info'
-                });
-
-                const paRect = new Rect({
-                    left: config.width - padding,
-                    top: config.height - padding - 50,
-                    width: 100,
-                    height: 50,
+            // 1. Inset Frame Border Rule
+            if (config.frameBorder?.visible) {
+                const dpi = config.print?.dpi || 72;
+                const pxPerMm = dpi / 25.4;
+                const insetPx = (config.frameBorder.insetMm || 12) * pxPerMm;
+                const strokeWidth = config.frameBorder.strokeWidth || 1.5;
+                const borderRect = new Rect({
+                    left: insetPx,
+                    top: insetPx,
+                    width: config.width - (insetPx * 2),
+                    height: config.height - (insetPx * 2),
                     fill: 'transparent',
-                    stroke: config.textColor,
-                    strokeWidth: 2,
-                    originX: 'right',
+                    stroke: config.frameBorder.color || config.textColor || '#000000',
+                    strokeWidth,
+                    selectable: false,
+                    evented: false,
                     // @ts-ignore
-                    name: 'pa_rect'
+                    name: 'frame_border'
                 });
-
-                const paText = new Text('PARENTAL\nADVISORY\nEXPLICIT CONTENT', {
-                    left: config.width - padding - 50,
-                    top: config.height - padding - 25,
-                    fontSize: 10,
-                    fontFamily: 'Arial Black',
-                    fill: config.textColor,
-                    fontWeight: 900,
-                    textAlign: 'center',
-                    originX: 'center',
-                    originY: 'center',
-                    // @ts-ignore
-                    name: 'pa_text'
-                });
-                canvas.add(infoText, paRect, paText);
+                canvas.add(borderRect);
             }
 
-            // 4.5 Palette Color Blocks (Palette Only)
+            // Note: Image Edge Blend is baked directly into the poster image bitmap's alpha channel
+            // (via applyImageEdgeFade) so it seamlessly tracks positioning, scaling, and rotation.
+
+            // ==========================================
+            // TEMPLATE: COLOR SWATCH
+            // ==========================================
             if (isPalette) {
-                const colors = ['#2c3e50', '#e74c3c', '#ecf0f1', '#3498db', '#2980b9']; // Placeholder palette
-                const swatchSize = 40;
-                const gap = 10;
-                const startX = config.width - padding - (5 * swatchSize) - (4 * gap);
-                const startY = config.height * 0.67;
+                const artBottom = config.height * 0.54;
+                const contentTop = artBottom + 28;
+                const availableW = config.width - padding * 2;
+                const midGap = 40;
+                const col1W = Math.floor((availableW - midGap) * 0.46);
+                const col2W = Math.floor((availableW - midGap) * 0.54);
+                const col1Left = padding;
+                const col2Left = padding + col1W + midGap;
 
-                colors.forEach((color, i) => {
-                    const rect = new Rect({
-                        left: startX + (i * (swatchSize + gap)),
-                        top: startY,
-                        width: swatchSize,
-                        height: swatchSize,
-                        fill: color, // In real implementation, this would come from the image
-                        selectable: false,
-                        // @ts-ignore
-                        name: `palette_swatch_${i}`
-                    });
-                    canvas.add(rect);
-                });
-            }
+                // Column 1: Numbered Tracklist (Direct robust multiline Textbox)
+                const trackFontSize = config.tracklistFontSize ?? 13;
+                const tracklistLines = metadata.tracks.map((track, i) => {
+                    const num = String(i + 1).padStart(2, '0');
+                    return `${num}. ${track.title.toUpperCase()}`;
+                }).join('\n');
 
-            // 5. Label Info Block
-            if (config.label?.visible) {
-                const { text = '', catalogNumber = '', year = '', position, width, align = 'left' } = config.label;
-
-                const labelTitle = new Textbox((text || '').toUpperCase(), {
-                    fontSize: 12,
+                const tracklistText = new Textbox(tracklistLines, {
+                    left: config.tracklistPosition?.left ?? col1Left,
+                    top: config.tracklistPosition?.top ?? contentTop,
+                    width: col1W,
+                    fontSize: trackFontSize,
                     fontFamily: config.fontFamily || 'Inter',
                     fill: config.textColor || '#000000',
-                    fontWeight: 700,
-                    width: width,
-                    textAlign: align,
-                    splitByGrapheme: true
+                    fontWeight: config.tracklistFontWeight || 700,
+                    lineHeight: 1.45,
+                    selectable: true,
+                    // @ts-ignore
+                    name: 'palette_tracklist'
                 });
+                canvas.add(tracklistText);
 
-                const labelMeta = new Textbox(`${catalogNumber} • ${year}`, {
+                // Column 1 Footer: Label & Length
+                const labelText = metadata.label || 'RECORD LABEL';
+                const lengthText = metadata.totalDuration || '45:10';
+                const trackHeight = tracklistText.height || (metadata.tracks.length * (trackFontSize + 6));
+                const metaTop = Math.min(Math.max(contentTop + trackHeight + 16, config.height - padding - 45), config.height - padding - 35);
+
+                const metaBlock = new Textbox(`LABEL: ${labelText.toUpperCase()}\nALBUM LENGTH: ${lengthText}`, {
+                    left: col1Left,
+                    top: metaTop,
+                    width: col1W,
                     fontSize: 10,
                     fontFamily: config.fontFamily || 'Inter',
                     fill: config.textColor || '#000000',
-                    fontWeight: 400,
-                    top: 14,
-                    width: width,
-                    textAlign: align,
-                    splitByGrapheme: true
+                    fontWeight: 800,
+                    lineHeight: 1.3,
+                    selectable: true,
+                    // @ts-ignore
+                    name: 'palette_meta'
+                });
+                canvas.add(metaBlock);
+
+                // Column 2: Swatches, Artist, Title, Signature, Release Date
+                let currentY = contentTop;
+
+                // 5 Color Swatches (Movable Group)
+                const swatches = config.paletteSwatches && config.paletteSwatches.length >= 5
+                    ? config.paletteSwatches.slice(0, 5)
+                    : ['#2c3e50', '#a27b5c', '#dcd7c9', '#4f709c', '#213555'];
+
+                const swatchGap = 8;
+                const swatchW = Math.floor((col2W - (4 * swatchGap)) / 5);
+                const swatchH = swatchW;
+                const rx = config.swatchShape === 'circle' ? swatchW / 2 : config.swatchShape === 'rounded' ? 6 : 0;
+
+                const defaultSwatchLeft = col2Left;
+                const defaultSwatchTop = currentY;
+                const swatchLeft = config.swatchesPosition?.left ?? defaultSwatchLeft;
+                const swatchTop = config.swatchesPosition?.top ?? defaultSwatchTop;
+
+                const swatchRects = swatches.map((color, idx) => {
+                    return new Rect({
+                        left: idx * (swatchW + swatchGap),
+                        top: 0,
+                        width: swatchW,
+                        height: swatchH,
+                        fill: color,
+                        rx,
+                        ry: rx,
+                        selectable: false,
+                        evented: false,
+                        // @ts-ignore
+                        name: `swatch_${idx}`
+                    });
                 });
 
-                const labelGroup = new Group([labelTitle, labelMeta], {
-                    left: position.left,
-                    top: position.top,
-                    name: 'label_info',
+                const swatchGroup = new Group(swatchRects, {
+                    left: swatchLeft,
+                    top: swatchTop,
+                    originX: 'left',
+                    originY: 'top',
                     selectable: true,
-                } as any);
+                    hasControls: true,
+                    lockRotation: true,
+                    lockScalingX: true,
+                    lockScalingY: true,
+                    // @ts-ignore
+                    name: 'swatches_group'
+                });
+                canvas.add(swatchGroup);
 
-                canvas.add(labelGroup);
+                if (!config.swatchesPosition) {
+                    currentY += swatchH + 20;
+                }
+
+                // Artist Name
+                const artistLeft = config.artistPosition?.left ?? col2Left;
+                const artistTop = config.artistPosition?.top ?? currentY;
+                const artistText = new Textbox(metadata.artist.toUpperCase(), {
+                    left: artistLeft,
+                    top: artistTop,
+                    fontSize: config.artistFontSize ?? 24,
+                    fontFamily: config.fontFamily || 'Inter',
+                    fill: config.artistColor || config.textColor || '#000000',
+                    fontWeight: config.artistFontWeight || 800,
+                    width: col2W,
+                    splitByGrapheme: true,
+                    selectable: true,
+                    // @ts-ignore
+                    name: 'artist'
+                });
+                canvas.add(artistText);
+                currentY = Math.max(currentY + (artistText.height || 30) + 8, artistTop + (artistText.height || 30) + 8);
+
+                // Big Stacked Album Title
+                const albumLeft = config.albumPosition?.left ?? col2Left;
+                const albumTop = config.albumPosition?.top ?? currentY;
+                const albumText = new Textbox(metadata.album.toUpperCase(), {
+                    left: albumLeft,
+                    top: albumTop,
+                    fontSize: config.albumFontSize ?? 56,
+                    fontFamily: config.fontFamily || 'Inter',
+                    fill: config.albumColor || config.textColor || '#000000',
+                    fontWeight: config.albumFontWeight || 900,
+                    lineHeight: 0.95,
+                    width: col2W,
+                    splitByGrapheme: true,
+                    selectable: true,
+                    // @ts-ignore
+                    name: 'album'
+                });
+                canvas.add(albumText);
+                currentY = Math.max(currentY + (albumText.height || 60) + 12, albumTop + (albumText.height || 60) + 12);
+
+                // Cursive Signature / Autograph Layer
+                if (config.signature?.visible) {
+                    const sigText = new Textbox(config.signature.text || metadata.artist, {
+                        left: col2Left,
+                        top: currentY,
+                        fontSize: config.signature.fontSize || 34,
+                        fontFamily: config.signature.fontFamily || 'Caveat',
+                        fill: config.signature.color || config.textColor || '#000000',
+                        width: col2W,
+                        selectable: true,
+                        // @ts-ignore
+                        name: 'signature'
+                    });
+                    canvas.add(sigText);
+                    currentY += (sigText.height || 40) + 10;
+                }
+
+                // Release Date Footer
+                const releaseTop = Math.min(Math.max(currentY + 10, config.height - padding - 40), config.height - padding - 30);
+                const releaseText = new Textbox(`RELEASED ON\n${metadata.releaseDate || metadata.year || '2024'}`.toUpperCase(), {
+                    left: col2Left,
+                    top: releaseTop,
+                    fontSize: 10,
+                    fontFamily: config.fontFamily || 'Inter',
+                    fill: config.textColor || '#000000',
+                    fontWeight: 800,
+                    width: col2W,
+                    lineHeight: 1.3,
+                    selectable: true,
+                    // @ts-ignore
+                    name: 'release_date'
+                });
+                canvas.add(releaseText);
+
+            } else {
+                // ==========================================
+                // TEMPLATES: MODERN, SPLIT & MINIMAL
+                // ==========================================
+                const albumAlign = config.albumAlign ?? (isModern ? 'center' : isMinimal ? 'center' : 'left');
+                const artistAlign = config.artistAlign ?? (isModern ? 'center' : isMinimal ? 'center' : 'left');
+                const trackAlign = config.tracklistAlign ?? (isModern ? 'center' : isMinimal ? 'center' : 'left');
+
+                const getX = (align: string) => align === 'left' ? padding : align === 'right' ? config.width - padding : config.width / 2;
+
+                // Slashed Inline Tracklist
+                if (isMinimal && config.tracklistLayout === 'inline') {
+                    const inlineContent = metadata.tracks.map(t => t.title.toUpperCase()).join('   /   ');
+                    const inlineText = new Textbox(inlineContent, {
+                        left: config.width / 2,
+                        top: padding + 15,
+                        width: config.width - padding * 2,
+                        fontSize: 11,
+                        fontFamily: config.fontFamily || 'Courier New',
+                        fill: config.textColor || '#000000',
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        originX: 'center',
+                        lineHeight: 1.6,
+                        selectable: true,
+                        // @ts-ignore
+                        name: 'inline_tracks'
+                    });
+                    canvas.add(inlineText);
+                }
+
+                // Artist & Album Text
+                const defaultPositions = {
+                    modern: { artist: config.height * 0.65, album: config.height * 0.72 },
+                    split: { artist: config.height * 0.54, album: config.height * 0.61 },
+                    minimal: { artist: config.height * 0.78, album: config.height * 0.70 },
+                };
+                const templateDefaults = defaultPositions[isModern ? 'modern' : isSplit ? 'split' : 'minimal'];
+
+                // Ghost Blur Echo Effect
+                if (config.textEffect === 'blur-echo') {
+                    const echoText = new Textbox(metadata.album.toUpperCase(), {
+                        left: (config.albumPosition?.left ?? getX(albumAlign)) + 6,
+                        top: (config.albumPosition?.top ?? templateDefaults.album) + 4,
+                        fontSize: config.albumFontSize ?? (isModern ? 85 : isSplit ? 48 : 65),
+                        fontFamily: config.fontFamily || 'Inter',
+                        fill: config.albumColor || config.textColor || '#000000',
+                        fontWeight: config.albumFontWeight || 900,
+                        textAlign: albumAlign,
+                        originX: albumAlign,
+                        opacity: 0.25,
+                        selectable: false,
+                        width: config.width - padding * 2
+                    });
+                    canvas.add(echoText);
+                }
+
+                const artistText = new Textbox(metadata.artist.toUpperCase(), {
+                    left: config.artistPosition?.left ?? getX(artistAlign),
+                    top: config.artistPosition?.top ?? templateDefaults.artist,
+                    fontSize: config.artistFontSize ?? (isModern ? 28 : isSplit ? 40 : 28),
+                    fontFamily: config.fontFamily || 'Inter',
+                    fill: config.artistColor || config.textColor || '#000000',
+                    fontWeight: config.artistFontWeight || 800,
+                    textAlign: artistAlign,
+                    originX: artistAlign,
+                    selectable: true,
+                    width: config.width - padding * 2,
+                    splitByGrapheme: true,
+                    // @ts-ignore
+                    name: 'artist'
+                });
+
+                const albumText = new Textbox(metadata.album.toUpperCase(), {
+                    left: config.albumPosition?.left ?? getX(albumAlign),
+                    top: config.albumPosition?.top ?? templateDefaults.album,
+                    fontSize: config.albumFontSize ?? (isModern ? 85 : isSplit ? 48 : 65),
+                    fontFamily: config.fontFamily || 'Inter',
+                    fill: config.albumColor || config.textColor || '#000000',
+                    fontWeight: config.albumFontWeight || 900,
+                    textAlign: albumAlign,
+                    originX: albumAlign,
+                    selectable: true,
+                    width: config.width - padding * 2,
+                    splitByGrapheme: true,
+                    // @ts-ignore
+                    name: 'album'
+                });
+
+                canvas.add(artistText, albumText);
+
+                // Signature script if enabled
+                if (config.signature?.visible) {
+                    const sigText = new Textbox(config.signature.text || metadata.artist, {
+                        left: getX(albumAlign),
+                        top: (albumText.top || templateDefaults.album) + (albumText.height || 50) + 8,
+                        fontSize: config.signature.fontSize || 34,
+                        fontFamily: config.signature.fontFamily || 'Caveat',
+                        fill: config.signature.color || config.textColor || '#000000',
+                        textAlign: albumAlign,
+                        originX: albumAlign,
+                        width: config.width - padding * 2,
+                        selectable: true,
+                        // @ts-ignore
+                        name: 'signature'
+                    });
+                    canvas.add(sigText);
+                }
+
+                // Tracklist rendering (Single Column or 2 Balanced Columns without empty Group bugs)
+                if (!(isMinimal && config.tracklistLayout === 'inline')) {
+                    const isDouble = config.tracklistLayout === 'double' || metadata.tracks.length > 11;
+                    const trackFontSize = config.tracklistFontSize ?? (isDouble ? 12 : 14);
+                    const defaultTrackTop = isModern ? config.height * 0.81 : isSplit ? config.height * 0.69 : config.height * 0.83;
+                    const trackTop = config.tracklistPosition?.top ?? defaultTrackTop;
+
+                    if (isDouble && metadata.tracks.length > 0) {
+                        const midpoint = Math.ceil(metadata.tracks.length / 2);
+                        const colW = (config.width - padding * 2) * 0.46;
+                        const colGap = (config.width - padding * 2) * 0.08;
+                        const col1Left = padding;
+                        const col2Left = padding + colW + colGap;
+
+                        const col1Content = metadata.tracks.slice(0, midpoint).map((t, idx) => {
+                            const num = String(idx + 1).padStart(2, '0');
+                            return `${num}. ${t.title.toUpperCase()}`;
+                        }).join('\n');
+
+                        const col2Content = metadata.tracks.slice(midpoint).map((t, idx) => {
+                            const num = String(midpoint + idx + 1).padStart(2, '0');
+                            return `${num}. ${t.title.toUpperCase()}`;
+                        }).join('\n');
+
+                        const col1Text = new Textbox(col1Content, {
+                            left: col1Left,
+                            top: trackTop,
+                            width: colW,
+                            fontSize: trackFontSize,
+                            fontFamily: config.fontFamily,
+                            fill: config.textColor,
+                            fontWeight: config.tracklistFontWeight || 600,
+                            lineHeight: 1.45,
+                            selectable: true,
+                            // @ts-ignore
+                            name: 'tracklist_col1'
+                        });
+
+                        const col2Text = new Textbox(col2Content, {
+                            left: col2Left,
+                            top: trackTop,
+                            width: colW,
+                            fontSize: trackFontSize,
+                            fontFamily: config.fontFamily,
+                            fill: config.textColor,
+                            fontWeight: config.tracklistFontWeight || 600,
+                            lineHeight: 1.45,
+                            selectable: true,
+                            // @ts-ignore
+                            name: 'tracklist_col2'
+                        });
+
+                        canvas.add(col1Text, col2Text);
+                    } else if (metadata.tracks.length > 0) {
+                        const singleContent = metadata.tracks.map((t, idx) => {
+                            const num = String(idx + 1).padStart(2, '0');
+                            return `${num}. ${t.title.toUpperCase()}`;
+                        }).join('\n');
+
+                        const trackText = new Textbox(singleContent, {
+                            left: config.tracklistPosition?.left ?? getX(trackAlign),
+                            top: trackTop,
+                            originX: trackAlign,
+                            textAlign: trackAlign,
+                            width: config.width - padding * 2,
+                            fontSize: trackFontSize,
+                            fontFamily: config.fontFamily,
+                            fill: config.textColor,
+                            fontWeight: config.tracklistFontWeight || 600,
+                            lineHeight: 1.45,
+                            selectable: true,
+                            // @ts-ignore
+                            name: 'tracklist'
+                        });
+
+                        canvas.add(trackText);
+                    }
+                }
+
+                // Liner Notes (Producer & Arranger credits at bottom)
+                if (config.linerNotes?.visible) {
+                    const linerAlign = config.linerNotes.align || 'center';
+                    const linerText = new Textbox((config.linerNotes.text || metadata.producerCredit || '').toUpperCase(), {
+                        left: getX(linerAlign),
+                        top: config.height - padding - 18,
+                        fontSize: config.linerNotes.fontSize || 10,
+                        fontFamily: config.fontFamily || 'Inter',
+                        fill: config.textColor || '#000000',
+                        fontWeight: 700,
+                        textAlign: linerAlign,
+                        originX: linerAlign,
+                        width: config.width - padding * 2,
+                        selectable: true,
+                        // @ts-ignore
+                        name: 'liner_notes'
+                    });
+                    canvas.add(linerText);
+                }
+
+                // Modern Template Badge: Parental Advisory + Year
+                if (isModern) {
+                    const infoText = new Text(`ALBUM • ${metadata.year}`, {
+                        left: config.width - padding,
+                        top: config.height - padding - 75,
+                        fontSize: 16,
+                        fontFamily: config.fontFamily,
+                        fill: config.textColor,
+                        fontWeight: 800,
+                        originX: 'right',
+                        // @ts-ignore
+                        name: 'metadata_info'
+                    });
+
+                    const paRect = new Rect({
+                        left: config.width - padding,
+                        top: config.height - padding - 50,
+                        width: 95,
+                        height: 48,
+                        fill: 'transparent',
+                        stroke: config.textColor,
+                        strokeWidth: 2,
+                        originX: 'right',
+                        // @ts-ignore
+                        name: 'pa_rect'
+                    });
+
+                    const paText = new Text('PARENTAL\nADVISORY\nEXPLICIT CONTENT', {
+                        left: config.width - padding - 47,
+                        top: config.height - padding - 26,
+                        fontSize: 9,
+                        fontFamily: 'Arial Black',
+                        fill: config.textColor,
+                        fontWeight: 900,
+                        textAlign: 'center',
+                        originX: 'center',
+                        originY: 'center',
+                        // @ts-ignore
+                        name: 'pa_text'
+                    });
+                    canvas.add(infoText, paRect, paText);
+                }
             }
 
-            // 6. Print Guides
+            // QR Code Rendering
+            if (config.qrCode?.visible && config.qrCode.url) {
+                import('qrcode').then(({ default: QRCode }) => {
+                    QRCode.toDataURL(config.qrCode!.url, {
+                        margin: 1,
+                        width: config.qrCode!.size || 100,
+                        color: {
+                            dark: config.textColor || '#000000',
+                            light: '#00000000'
+                        }
+                    }).then(qrDataUrl => {
+                        FabricImage.fromURL(qrDataUrl).then(qrImg => {
+                            qrImg.set({
+                                left: config.width - padding - (config.qrCode!.size || 100),
+                                top: config.height - padding - (config.qrCode!.size || 100) - 20,
+                                selectable: true,
+                                // @ts-ignore
+                                name: 'qr_code'
+                            });
+                            canvas.add(qrImg);
+                            canvas.renderAll();
+                        });
+                    }).catch(err => console.error('Failed to generate QR code:', err));
+                });
+            }
+
+            // Print Guides
             if (config.print) {
                 const { showBleed, showMargins, bleedMm, marginMm, dpi } = config.print;
                 const pxPerMm = (dpi || 72) / 25.4;
@@ -485,52 +788,116 @@ export function CanvasArea() {
                     canvas.add(marginRect);
                 }
             }
+
             canvas.renderAll();
         };
 
-        // Image Loading and Background Handling
+        // Interactive Image Loading & Setup
         if (config.backgroundImage) {
-            FabricImage.fromURL(config.backgroundImage, { crossOrigin: 'anonymous' }).then((img: FabricObject) => {
+            const fadeVal = config.imageFade || 0;
+            const fadeKey = `${config.backgroundImage}_${fadeVal}`;
+
+            const getImageSrc = async (): Promise<string> => {
+                if (cachedFadedImage.current.key === fadeKey && cachedFadedImage.current.src) {
+                    return cachedFadedImage.current.src;
+                }
+                const src = await applyImageEdgeFade(config.backgroundImage!, fadeVal);
+                cachedFadedImage.current = { key: fadeKey, src };
+                return src;
+            };
+
+            getImageSrc().then((processedSrc) => {
+                FabricImage.fromURL(processedSrc, { crossOrigin: 'anonymous' }).then((img: FabricImage) => {
                 if (!img.width || !img.height) return;
-                img.set({ clipPath: undefined, scaleX: 1, scaleY: 1, angle: 0 });
+
+                // Remove previous image object if existing
+                const existing = canvas.getObjects().find(o => (o as any).name === 'poster_image');
+                if (existing) canvas.remove(existing);
+
+                const padding = config.padding ?? 60;
+                let baseScale = 1;
+                let baseLeft = config.width / 2;
+                let baseTop = 0;
+                let originX: 'center' | 'left' = 'center';
+                let originY: 'top' | 'center' = 'top';
 
                 if (config.template === 'modern') {
                     const targetH = config.height * 0.60;
-                    const s = Math.max(config.width / img.width, targetH / img.height);
-                    img.set({ scaleX: s, scaleY: s, originX: 'center', originY: 'top', left: config.width / 2, top: 0 });
+                    baseScale = Math.max(config.width / img.width, targetH / img.height);
+                    baseLeft = config.width / 2;
+                    baseTop = 0;
                 } else if (config.template === 'split') {
-                    const s = config.width / img.width;
-                    img.set({ scaleX: s, scaleY: s, originX: 'center', originY: 'top', left: config.width / 2, top: 0 });
+                    baseScale = config.width / img.width;
+                    baseLeft = config.width / 2;
+                    baseTop = 0;
                 } else if (config.template === 'minimal') {
-                    const size = Math.min(config.width, config.height) * 0.4;
-                    const s = Math.min(size / img.width, size / img.height);
-                    img.set({ scaleX: s, scaleY: s, originX: 'center', originY: 'center', left: config.width / 2, top: config.height * 0.3 });
+                    const isInline = config.tracklistLayout === 'inline';
+                    const size = Math.min(config.width, config.height) * 0.44;
+                    baseScale = Math.min(size / img.width, size / img.height);
+                    baseLeft = config.width / 2;
+                    baseTop = isInline ? config.height * 0.42 : config.height * 0.35;
+                    originY = 'center';
                 } else if (config.template === 'palette') {
-                    const s = config.width / img.width;
-                    // Crop or scale to top 65%
-                    img.set({ scaleX: s, scaleY: s, originX: 'center', originY: 'top', left: config.width / 2, top: 0 });
-                    // Optional: clip to top area if needed, but simple scaling is fine for now
+                    const maxW = config.width - (padding * 2);
+                    const maxH = config.height * 0.52;
+                    baseScale = Math.min(maxW / img.width, maxH / img.height);
+                    baseLeft = config.width / 2;
+                    baseTop = padding;
                 }
 
-                canvas.backgroundImage = img;
-                handleBackgroundColor(canvas, config.backgroundColor);
-                renderTextAndBranding();
+                const finalScale = baseScale * (config.imageScale ?? 1);
+                const finalLeft = baseLeft + (config.imageOffsetX || 0);
+                const finalTop = baseTop + (config.imageOffsetY || 0);
+
+                img.set({
+                    // @ts-ignore
+                    name: 'poster_image',
+                    originX,
+                    originY,
+                    left: finalLeft,
+                    top: finalTop,
+                    scaleX: finalScale,
+                    scaleY: finalScale,
+                    opacity: config.imageOpacity ?? 1,
+                    // @ts-ignore
+                    globalCompositeOperation: config.imageBlendMode || 'normal',
+                    selectable: !config.imageLocked,
+                    evented: !config.imageLocked,
+                    lockRotation: true,
+                    // @ts-ignore
+                    data: { baseLeft, baseTop, baseScale }
+                });
+
+                img.setCoords();
+
+                // Apply Image Blur Filter if configured
+                if (config.imageBlur && config.imageBlur > 0) {
+                    img.filters = [new filters.Blur({ blur: config.imageBlur })];
+                    img.applyFilters();
+                } else {
+                    img.filters = [];
+                    img.applyFilters();
+                }
+
+                // Insert image at base stack (underneath text and guides)
+                canvas.insertAt(0, img);
+                renderTextAndBranding(img);
             }).catch(err => {
-                console.error("Failed to load background image:", err);
-                canvas.backgroundImage = undefined;
-                handleBackgroundColor(canvas, config.backgroundColor);
+                console.error("Failed to load image:", err);
                 renderTextAndBranding();
             });
+        }).catch(err => {
+            console.error("Failed to process edge fade:", err);
+            renderTextAndBranding();
+        });
         } else {
-            canvas.backgroundImage = undefined;
-            handleBackgroundColor(canvas, config.backgroundColor);
+            const existing = canvas.getObjects().find(o => (o as any).name === 'poster_image');
+            if (existing) canvas.remove(existing);
             renderTextAndBranding();
         }
 
-        // Ensure font is loaded, then re-render to correct metrics
         if (config.fontFamily) {
             document.fonts.load(`12px "${config.fontFamily}"`).then(() => {
-                // We only re-render if the component is still mounted and canvas exists
                 if (fabricRef.current) {
                     renderTextAndBranding();
                 }
@@ -542,11 +909,11 @@ export function CanvasArea() {
     return (
         <div ref={containerRef} className="w-full h-full flex items-center justify-center bg-[var(--background)] relative overflow-hidden transition-colors duration-300">
             {/* Zoom Controls */}
-            <div className="absolute bottom-6 right-6 flex gap-2 bg-[var(--surface)] backdrop-blur rounded-lg p-1 border border-[var(--border)] z-10 shadow-sm transition-all">
-                <button onClick={() => setZoom(z => Math.max(z * 0.9, 0.1))} className="p-2 hover:bg-[var(--background)] rounded text-[var(--foreground)]">-</button>
-                <span className="p-2 text-xs font-mono text-[var(--muted)] min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
-                <button onClick={() => setZoom(z => Math.min(z * 1.1, 5))} className="p-2 hover:bg-[var(--background)] rounded text-[var(--foreground)]">+</button>
-                <button onClick={() => setZoom(1)} className="p-2 hover:bg-[var(--background)] rounded text-[var(--foreground)] px-3">Fit</button>
+            <div className="absolute bottom-6 right-6 flex gap-2 bg-[var(--surface)] backdrop-blur rounded-lg p-1 border border-[var(--border-color)] z-10 shadow-sm transition-all">
+                <button onClick={() => setZoom(z => Math.max(z * 0.9, 0.1))} className="p-2 hover:bg-[var(--surface2)] rounded text-[var(--text)]">-</button>
+                <span className="p-2 text-xs font-mono text-[var(--text2)] min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom(z => Math.min(z * 1.1, 5))} className="p-2 hover:bg-[var(--surface2)] rounded text-[var(--text)]">+</button>
+                <button onClick={() => setZoom(1)} className="p-2 hover:bg-[var(--surface2)] rounded text-[var(--text)] px-3">Fit</button>
             </div>
 
             <div className="w-full h-full overflow-auto flex items-center justify-center p-10">
@@ -554,16 +921,18 @@ export function CanvasArea() {
                     width: config.width * scale * zoom,
                     height: config.height * scale * zoom,
                     flexShrink: 0,
-                    transition: 'width 0.1s ease-out, height 0.1s ease-out'
+                    transition: 'width 0.1s ease-out, height 0.1s ease-out',
+                    overflow: 'hidden'
                 }}>
                     <div style={{
                         width: config.width,
                         height: config.height,
                         transform: `scale(${scale * zoom})`,
                         transformOrigin: 'top left',
-                        boxShadow: '0 0 50px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.1s ease-out, box-shadow 0.3s ease'
-                    }} className="hover:shadow-2xl dark:shadow-black/50">
+                        boxShadow: '0 25px 60px -15px rgba(0,0,0,0.3)',
+                        transition: 'transform 0.1s ease-out, box-shadow 0.3s ease',
+                        overflow: 'hidden'
+                    }} className="dark:shadow-black/70">
                         <canvas ref={canvasRef} />
                     </div>
                 </div>
