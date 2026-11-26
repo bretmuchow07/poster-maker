@@ -2,27 +2,33 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Github } from 'lucide-react';
+import { Github, ArrowUpRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { PressroomLockupHorizontal, PressroomMark } from '@/components/PressroomBrand';
+
+export const DotClusterLogo = PressroomMark;
 
 export function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--surface)]/90 backdrop-blur-md border-b border-[var(--border-color)] transition-colors duration-200">
-      <div className="h-16 w-full px-4 sm:px-8 max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="brand select-none hover:opacity-85 transition-opacity flex items-center text-lg sm:text-xl font-bold"
-            title="PosterMaker Home"
-          >
-            Poster<span>Maker</span>
-          </Link>
-          <span className="text-[11px] font-mono uppercase text-[var(--accent)] px-2 py-0.5 bg-[var(--surface2)] border border-[var(--border-color)] rounded hidden sm:inline-block">
-            Album Poster Studio
-          </span>
-        </div>
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-4 left-0 right-0 z-50 px-4 sm:px-6 pointer-events-none"
+    >
+      <div className="max-w-5xl mx-auto flex items-center justify-between bg-[var(--surface)]/95 backdrop-blur-md text-[var(--text)] border border-[var(--border-color)] rounded-full px-5 py-2.5 pointer-events-auto transition-colors duration-300 shadow-sm">
+        {/* Brand Cluster */}
+        <Link
+          href="/"
+          className="flex items-center text-[var(--text)] hover:opacity-85 transition-opacity shrink-0"
+          title="Pressroom — Music Print Studio"
+        >
+          <PressroomLockupHorizontal className="h-8 sm:h-9 w-auto" />
+        </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-xs text-[var(--text2)]">
+        {/* Real Functional Navigation Links */}
+        <nav className="hidden md:flex items-center gap-6 text-[14px] text-[var(--text2)]">
           <a href="#templates" className="hover:text-[var(--text)] transition-colors">
             Templates
           </a>
@@ -35,33 +41,41 @@ export function Header() {
           <a href="#faq" className="hover:text-[var(--text)] transition-colors">
             FAQ
           </a>
+          <Link href="/about" className="hover:text-[var(--text)] transition-colors">
+            About
+          </Link>
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* GitHub Source Link */}
-          <a
+        {/* Action cluster: GitHub + Theme Toggle + Open Studio Button */}
+        <div className="flex items-center gap-2.5">
+          <motion.a
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             href="https://github.com/bretmuchow07/poster-maker"
             target="_blank"
             rel="noopener noreferrer"
-            className="tbtn border border-[var(--border-color)] bg-[var(--surface)] text-[var(--text2)] hover:text-[var(--text)] hover:bg-[var(--surface2)] transition-all"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text2)] hover:text-[var(--text)] hover:bg-[var(--surface2)] transition-colors"
             title="View Source on GitHub"
-            aria-label="View Source on GitHub"
+            aria-label="GitHub Repository"
           >
-            <Github size={16} />
-          </a>
+            <Github size={15} />
+          </motion.a>
 
-          {/* Dark / Light Mode Toggle */}
-          <ThemeToggle />
+          <div className="scale-90 origin-center">
+            <ThemeToggle />
+          </div>
 
-          <Link
-            href="/editor"
-            className="btn btn-primary inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg transition-all shadow-sm active:scale-95"
-          >
-            <span>Open Editor</span>
-            <ArrowRight size={14} />
-          </Link>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}>
+            <Link
+              href="/editor"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[14px] font-medium text-[var(--bg)] bg-[var(--text)] rounded-[16px] hover:opacity-90 transition-opacity shadow-xs"
+            >
+              <span>Open Studio</span>
+              <ArrowUpRight size={13} />
+            </Link>
+          </motion.div>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

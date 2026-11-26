@@ -7,123 +7,118 @@ import { motion } from 'framer-motion';
 
 const TEMPLATES = [
   {
+    id: 'cosmos',
+    name: 'Archival Linen Atelier',
+    badge: 'NEW ARCHETYPE',
+    description: 'Unprimed linen canvas, optical didone whisper serif typography, 8-dot registration mark, and 5-swatch palette row.',
+    image: '/examples/cosmos.png',
+    link: '/editor?template=cosmos&artist=Echo+Velocity&album=Linen+Gallery+Archive',
+  },
+  {
     id: 'palette',
     name: 'Swiss Palette Grid',
-    inspiredBy: 'Asymmetric 2-Column Swiss Grid',
-    description:
-      'A structured 2-column Swiss modernist layout featuring a framed cover, 5 extracted color swatches, an ordered tracklist, label and runtime metadata, and an artist signature layer.',
-    bg: '#F5F3EE',
-    textColor: '#14171A',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAdc3pScOq7iwApF_pMJm3Ykq6qDv6lpHtCl7A2xKuAJiXUx4l1zWeBAU8I8Vov8j_9se74Gd15pgygF_AQuCNj6r70evMdAfKozjhACEo7GvSG7d4n25NsWw6WdCynSObLDQF8j2zaoL5lwLqgOZfLUwEZdMfsMagChq3xFX4s7GWL_VzWwZVfZmtkhmntt-FbLmk5cCosZF9S7sUYJ6qpeZ2DrwRznil1dX4FWnlz-udChC59KCnY',
-    query: 'template=palette&artist=Echo+Velocity&album=Neo-Construct+04',
+    badge: 'CLASSIC MODERNIST',
+    description: 'Asymmetric 2-column modernist grid with framed artwork, 5 extracted color swatches, ordered tracklist, and signature layer.',
+    image: '/examples/palette.png',
+    link: '/editor?template=palette&artist=Echo+Velocity&album=Neo-Construct+04',
   },
   {
     id: 'minimal',
     name: 'Brutalist Inset Rule',
-    inspiredBy: 'Fine Hairline Inset & Slashed Typography',
-    description:
-      'Solid colored editorial paper framed by a fine hairline inset border. Features an inline slashed tracklist above the artwork and high-impact grotesque typography below.',
-    bg: '#F5A8B8',
-    textColor: '#121315',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9vX4P-g98HdPki1CekOA_pxSdvtMzfDFxQUrXUnZoZZROY5wN31KpppNlJyLyBxbZgs6vQ4dM66lqpurmVGO9ykDswirDnsUXoIPxnwbO-UOViWK8aeqcR_XTgAucE7EUPbtTbljNNbmzVmL8w1jS2szNf5PO5CTifwPTR5DYHHTE9qV4aS7LjW7kmMxuAmcgItyNqlDqKMHLpjJdTz88GwAVSvyC_e5xzpraES5-zBBitynAoy1K',
-    query: 'template=minimal&artist=Studio+Recordings&album=Chromatic+Static',
+    badge: 'EDITORIAL PAPER',
+    description: 'Solid editorial paper framed by a fine hairline inset border. Inline slashed tracklist stream above the artwork with grotesque typography below.',
+    image: '/examples/minimal.png',
+    link: '/editor?template=minimal&artist=Studio+Recordings&album=Chromatic+Static',
   },
   {
     id: 'split',
     name: 'Cinematic Split',
-    inspiredBy: 'Photographic Edge Fade & Blur Echo',
-    description:
-      'Upper photographic bleed fading into dark paper with an edge blend. Paired with a kinetic blur title echo and a balanced 2-column tracklist with feature credits.',
-    bg: '#0E0E10',
-    textColor: '#E3E2E5',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA2NkY8wjVm-YQoyGOYT8MBoOaMxVH_wMmGYF0aTyxh58kf6k8sv3xDpZPOVLXukDcf9jlaoUL6VDE4y8E7SG2PgTK1rLehBsFd1OdCMnh_YZapph_Xm0BqUNJWxE6Jmw8eSqqHHQvcefZW10srssjb7E_otr_INazRmb2GBCcfytTJw_AyLCy0smNv9U0MMftLRYWDMLm4pFHOZhi0AHWGvlg58MQT2c0Gc1E_G16fVz3vVOg5Ar45',
-    query: 'template=split&artist=Solene+Grey&album=Nocturne+Protocol',
+    badge: 'EDGE BLEND',
+    description: 'Upper photographic bleed fading into dark paper with baked alpha edge blending, paired with kinetic blur title echo and 2-column tracks.',
+    image: '/examples/split.png',
+    link: '/editor?template=split&artist=Solene+Grey&album=Nocturne+Protocol',
   },
   {
     id: 'modern',
     name: 'Modern Studio',
-    inspiredBy: 'Edge-to-Edge Vinyl Sleeve Edition',
-    description:
-      'Dominant edge-to-edge album artwork taking center stage, accompanied by bold stacked artist titles, an optional scannable streaming QR code, and a parental advisory badge.',
-    bg: '#141416',
-    textColor: '#FFFFFF',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBibAuWFqRdxG06qQ4XNcjWD6os1Wdis0lNRvdYpZeKHYC-LprV173q7NtqmoZnUq-UCGOBaqVcOz4mdzaRRfYeB4B-OFgrVjBG4weBI83016Z_zneHqeKm7vWQI8cREm-GLlVPlQuR7YlE83LpmeH56ak5w7h_HT6gc8jRq83XGB4_hzXnZKE3-E5Avr_ChU9o0gu7CrmG6v3L1eEpY2ZaszAJEHJu7YGPp0ZTKwAOmcpPmDf6OjwT',
-    query: 'template=modern',
+    badge: 'VINYL SLEEVE',
+    description: 'Edge-to-edge album artwork taking center stage, accompanied by bold stacked artist titles, streaming QR code, and parental advisory badge.',
+    image: '/examples/modern.png',
+    link: '/editor?template=modern',
   },
 ];
 
 export function TemplateShowcase() {
   return (
-    <section className="w-full px-4 sm:px-8 py-20 bg-[var(--bg)] transition-colors duration-200" id="templates">
-      <div className="max-w-7xl mx-auto flex flex-col gap-10">
-        <div className="max-w-2xl">
-          <h2 className="font-display text-3xl sm:text-4xl uppercase text-[var(--text)] font-extrabold tracking-tight">
-            Four Iconic Layout Archetypes
+    <section className="w-full px-4 sm:px-8 py-20 max-w-7xl mx-auto bg-[var(--bg)] transition-colors duration-300" id="templates">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
+        <div>
+          <span className="font-serif-display text-[13px] sm:text-[14px] text-[var(--text)] uppercase tracking-normal font-medium block mb-2">
+            ARCHIVAL ARCHETYPES
+          </span>
+          <h2 className="font-serif-display text-[var(--text)] text-3xl sm:text-4xl md:text-[38px] leading-[1.08] tracking-[-1.52px] font-[350]">
+            Five distinct drafting frameworks.
           </h2>
-          <p className="text-sm sm:text-base text-[var(--text2)] mt-2 leading-relaxed">
-            Every template is fully customizable: change fonts, colors, borders, image positioning, and tracklist flows with intuitive controls.
-          </p>
         </div>
+        <p className="text-[var(--text2)] text-base max-w-md font-normal leading-relaxed">
+          Every archetype comes pre-calibrated with baseline grids, typographic hierarchy, and palette sampling. Click any design to launch directly in the atelier.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TEMPLATES.map((tmpl, idx) => (
-            <motion.div
-              key={tmpl.id}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -6, scale: 1.015 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex"
-            >
+      {/* 5 Archetypes Grid with HyperFrames InView and Spring Hover Lift */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {TEMPLATES.map((tmpl, idx) => (
+          <motion.div
+            key={tmpl.id}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -6, scale: 1.015 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex flex-col group cursor-pointer"
+          >
+            {/* Card Image Container (16px radius, edge-to-edge image) */}
+            <div className="relative w-full aspect-[4/5] rounded-[16px] overflow-hidden bg-[var(--surface2)] border border-[var(--border-color)] shadow-sm group-hover:shadow-lg transition-all duration-300">
+              <div
+                className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-[1.03]"
+                style={{ backgroundImage: `url('${tmpl.image}')` }}
+              />
+
+              {/* Archetype Badge */}
+              <div className="absolute top-4 left-4 z-20">
+                <span className="text-[11px] font-mono uppercase px-2.5 py-1 bg-[var(--surface)]/90 backdrop-blur-sm text-[var(--text)] rounded-full border border-[var(--border-color)] font-semibold tracking-wider shadow-xs">
+                  {tmpl.badge}
+                </span>
+              </div>
+
+              {/* Hover CTA Link Overlay */}
               <Link
-                href={`/editor?${tmpl.query}`}
-                className="bg-[var(--surface)] border border-[var(--border-color)] hover:border-[var(--border-hover)] hover:bg-[var(--surface2)] p-5 rounded-xl shadow-lg flex flex-col justify-between gap-4 group transition-all duration-200 w-full"
+                href={tmpl.link}
+                className="absolute inset-0 z-10 flex items-end p-6 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               >
-                <div className="flex flex-col gap-3">
-                  <div
-                    style={{ backgroundColor: tmpl.bg, color: tmpl.textColor }}
-                    className="w-full aspect-[4/5] p-4 rounded-lg flex flex-col justify-between shadow-inner relative overflow-hidden"
-                  >
-                    <div className="w-full h-32 rounded bg-black/10 overflow-hidden">
-                      <img
-                        src={tmpl.image}
-                        alt={tmpl.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1 pt-2">
-                      <span className="font-display text-sm font-bold uppercase truncate">
-                        {tmpl.name}
-                      </span>
-                      <span className="text-[9px] font-mono opacity-70 truncate">
-                        {tmpl.inspiredBy}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <h3 className="font-display text-base uppercase text-[var(--text)] font-bold">
-                      {tmpl.name}
-                    </h3>
-                    <ArrowUpRight size={16} className="text-[var(--text3)] group-hover:text-[var(--accent)] transition-colors" />
-                  </div>
-
-                  <p className="text-xs text-[var(--text2)] leading-relaxed">
-                    {tmpl.description}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-[var(--border-color)] font-mono text-[10px] text-[var(--accent)] font-semibold flex items-center justify-between">
-                  <span>OPEN TEMPLATE</span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </div>
+                <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-[var(--surface)] text-[var(--text)] text-[14px] font-medium rounded-[16px] shadow-sm">
+                  <span>Open Archetype</span>
+                  <ArrowUpRight size={14} />
+                </span>
               </Link>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+
+            {/* Typography below the card */}
+            <div className="pt-4 flex flex-col gap-1">
+              <Link
+                href={tmpl.link}
+                className="font-serif-display text-[18px] text-[var(--text)] leading-[1.29] tracking-[-0.2px] font-medium hover:opacity-80 transition-opacity"
+              >
+                {tmpl.name}
+              </Link>
+              <p className="text-[14px] text-[var(--text2)] leading-relaxed font-normal">
+                {tmpl.description}
+              </p>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </section>
   );

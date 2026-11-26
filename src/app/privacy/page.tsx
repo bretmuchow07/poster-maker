@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { PressroomLockupStacked } from '@/components/PressroomBrand';
 
 export default function PrivacyPage() {
     return (
@@ -10,12 +11,19 @@ export default function PrivacyPage() {
                     Back to Studio Home
                 </Link>
 
-                <h1 className="text-4xl font-extrabold tracking-tight">Privacy Policy</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-[var(--sidebar-border)]">
+                    <div className="shrink-0">
+                        <PressroomLockupStacked className="w-32 sm:w-36 h-auto text-[var(--text)]" />
+                    </div>
+                    <div className="space-y-2">
+                        <h1 className="font-serif-display text-4xl font-[350] tracking-tight">Privacy Policy</h1>
+                        <p className="text-[var(--foreground)]">
+                            Pressroom is designed as an offline-capable, browser-native music print studio with privacy by design:
+                        </p>
+                    </div>
+                </div>
 
                 <div className="space-y-6 text-[var(--muted-foreground)] leading-relaxed">
-                    <p className="text-[var(--foreground)]">
-                        PosterMaker is designed as an offline-capable, browser-native creative tool with privacy by design:
-                    </p>
 
                     <section className="space-y-2 bg-[var(--surface)] p-6 rounded-xl border border-[var(--sidebar-border)]">
                         <h2 className="text-lg font-semibold text-[var(--foreground)]">Zero Remote Tracking</h2>
@@ -38,8 +46,11 @@ export default function PrivacyPage() {
                         </p>
                     </section>
 
-                    <div className="pt-6 border-t border-[var(--sidebar-border)] text-xs font-mono text-[var(--muted-foreground)]">
-                        Last reviewed: 2025 • Open Source MIT License
+                    <div className="pt-6 border-t border-[var(--sidebar-border)] flex items-center justify-between text-xs font-mono text-[var(--muted-foreground)]">
+                        <span>Last reviewed: 2026 • Pressroom (PR–001) • Open Source MIT License</span>
+                        <Link href="/about" className="hover:text-[var(--foreground)] transition-colors">
+                            About Pressroom
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -1,89 +1,80 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const SIZES = [
   {
-    category: 'International A-Series',
+    category: 'International ISO A-Series',
     items: [
-      { name: 'A4', dim: '210 × 297 mm', use: 'Compact framing & desktop prints' },
-      { name: 'A3', dim: '297 × 420 mm', use: 'Most popular bedroom & studio wall size' },
-      { name: 'A2', dim: '420 × 594 mm', use: 'Large format statement art' },
+      { name: 'A4', dim: '210 × 297 mm', use: 'Compact desk framing & archival folios' },
+      { name: 'A3', dim: '297 × 420 mm', use: 'Most popular studio & gallery wall format' },
+      { name: 'A2', dim: '420 × 594 mm', use: 'Large format exhibition statement artwork' },
     ],
   },
   {
-    category: 'Standard US Frames',
+    category: 'Standard US Gallery Frames',
     items: [
-      { name: '12 × 12″', dim: '305 × 305 mm', use: 'Exact 1:1 vinyl sleeve square frame' },
-      { name: '18 × 24″', dim: '457 × 610 mm', use: 'Standard retail gallery frame' },
-      { name: '24 × 36″', dim: '610 × 914 mm', use: 'Classic large concert & tour poster' },
+      { name: '12 × 12″', dim: '305 × 305 mm', use: '1:1 vinyl sleeve collector square' },
+      { name: '18 × 24″', dim: '457 × 610 mm', use: 'Standard retail frame off-the-shelf' },
+      { name: '24 × 36″', dim: '610 × 914 mm', use: 'Concert tour print & museum mount' },
     ],
   },
 ];
 
 export function PrintSpecsSection() {
   return (
-    <section className="w-full px-4 sm:px-8 py-20 bg-[var(--bg)] border-b border-[var(--border-color)] transition-colors duration-200" id="formats">
+    <section className="w-full px-4 sm:px-8 py-20 bg-[var(--bg)] border-b border-[var(--border-color)] transition-colors duration-300" id="formats">
       <div className="max-w-7xl mx-auto flex flex-col gap-10">
         <div className="max-w-2xl">
-          <h2 className="font-display text-3xl sm:text-4xl uppercase text-[var(--text)] font-extrabold tracking-tight">
-            Standard Print Dimensions &amp; Export Formats
+          <span className="font-serif-display text-[13px] sm:text-[14px] text-[var(--text)] uppercase tracking-normal font-medium block mb-2">
+            PHYSICAL SPECIFICATIONS
+          </span>
+          <h2 className="font-serif-display text-3xl sm:text-4xl text-[var(--text)] font-[350] tracking-[-1.32px] leading-[1.1]">
+            Calibrated for standard retail frames.
           </h2>
-          <p className="text-sm sm:text-base text-[var(--text2)] mt-2 leading-relaxed">
-            PosterMaker exports high-resolution files pre-sized for standard picture frames, so you can send them straight to your local print shop or online service.
+          <p className="text-[15px] sm:text-[16px] text-[var(--text2)] mt-2 leading-relaxed font-normal">
+            Export 300 DPI high-density print files calibrated for standard frames without custom matting costs.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {SIZES.map((col, idx) => (
-            <div key={idx} className="bg-[var(--surface)] border border-[var(--border-color)] p-6 rounded-xl shadow-lg flex flex-col gap-4">
-              <span className="font-mono text-xs text-[var(--accent)] font-bold uppercase tracking-wider">
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -4 }}
+              className="bg-[var(--surface)] border border-[var(--border-color)] p-6 sm:p-8 rounded-[16px] flex flex-col gap-5 select-none shadow-xs transition-shadow hover:shadow-md"
+            >
+              <span className="font-serif-display text-[14px] text-[var(--text)] font-medium uppercase tracking-tight">
                 {col.category}
               </span>
 
               <div className="flex flex-col gap-3">
                 {col.items.map((item) => (
-                  <div key={item.name} className="flex justify-between items-center p-3 rounded bg-[var(--surface2)] border border-[var(--border-color)]">
+                  <div
+                    key={item.name}
+                    className="flex justify-between items-center p-4 rounded-[12px] bg-[var(--surface2)] border border-[var(--border-color)] transition-colors"
+                  >
                     <div>
-                      <span className="font-display text-base uppercase text-[var(--text)] font-bold block">
+                      <span className="font-serif-display text-[16px] text-[var(--text)] font-medium block">
                         {item.name}
                       </span>
-                      <span className="text-xs text-[var(--text2)]">
+                      <span className="text-[13px] text-[var(--text2)] font-normal">
                         {item.use}
                       </span>
                     </div>
-                    <span className="font-mono text-xs text-[var(--accent)] font-semibold">
+                    <span className="font-mono text-[13px] text-[var(--text)] px-2.5 py-1 rounded-[8px] bg-[var(--surface)] border border-[var(--border-color)]">
                       {item.dim}
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
-
-        {/* Export Quality Banner */}
-        <div className="bg-[var(--surface)] border border-[var(--border-color)] p-6 rounded-xl shadow flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="font-display text-base uppercase text-[var(--text)] font-bold">
-              Export Formats: PNG, JPG, or PDF
-            </span>
-            <span className="text-xs text-[var(--text2)]">
-              Choose 72 DPI for web sharing, 150 DPI for everyday desk prints, or 300 DPI for crisp gallery printing.
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-xs px-2.5 py-1 bg-[var(--surface2)] text-[var(--text)] rounded border border-[var(--border-color)]">
-              300 DPI
-            </span>
-            <span className="font-mono text-xs px-2.5 py-1 bg-[var(--surface2)] text-[var(--text)] rounded border border-[var(--border-color)]">
-              CMYK-Friendly
-            </span>
-            <span className="font-mono text-xs px-2.5 py-1 bg-[var(--surface2)] text-[var(--text)] rounded border border-[var(--border-color)]">
-              No Watermark
-            </span>
-          </div>
         </div>
       </div>
     </section>

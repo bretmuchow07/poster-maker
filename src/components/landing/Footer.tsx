@@ -2,108 +2,85 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Github } from 'lucide-react';
+import { Github, ArrowUpRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { PressroomLockupHorizontal } from '@/components/PressroomBrand';
 
 export function Footer() {
   return (
-    <footer className="w-full bg-[var(--surface)] border-t border-[var(--border-color)] py-12 px-4 sm:px-8 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto flex flex-col gap-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-xs">
-          {/* Brand info */}
-          <div className="flex flex-col gap-3">
-            <Link href="/" className="brand select-none text-xl font-bold">
-              Poster<span>Maker</span>
+    <footer className="w-full bg-[var(--surface)] border-t border-[var(--border-color)] py-12 px-4 sm:px-8 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto flex flex-col gap-8">
+        {/* Main Clean Row */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[var(--border-color)]">
+          {/* Brand & Purpose */}
+          <div className="flex flex-col gap-2">
+            <Link href="/" className="inline-flex items-center self-start text-[var(--text)] hover:opacity-85 transition-opacity" title="Pressroom — Music Print Studio">
+              <PressroomLockupHorizontal className="h-10 sm:h-11 w-auto" />
             </Link>
-            <p className="text-[var(--text2)] leading-relaxed">
-              A privacy-focused, browser-based design studio for creating iconic music album posters ready for physical framing.
+            <p className="text-[13px] text-[var(--text2)]">
+              Independent music print studio. Make Music Visible — in-browser with zero tracking.
             </p>
-            <div className="pt-1">
-              <a
-                href="https://github.com/bretmuchow07/poster-maker"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline font-mono"
-              >
-                <Github size={13} />
-                <span>github.com/bretmuchow07/poster-maker</span>
-              </a>
-            </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs uppercase text-[var(--accent)] font-bold">
-              Navigation
-            </span>
-            <Link href="/editor" className="text-[var(--text2)] hover:text-[var(--text)] transition-colors">
-              Open Editor
+          {/* Essential Clean Links */}
+          <nav className="flex flex-wrap items-center gap-5 sm:gap-7 text-[13px] text-[var(--text2)]">
+            <a href="#templates" className="hover:text-[var(--text)] transition-colors">
+              Templates
+            </a>
+            <a href="#features" className="hover:text-[var(--text)] transition-colors">
+              Features
+            </a>
+            <a href="#formats" className="hover:text-[var(--text)] transition-colors">
+              Print Sizes
+            </a>
+            <a href="#faq" className="hover:text-[var(--text)] transition-colors">
+              FAQ
+            </a>
+            <Link href="/about" className="hover:text-[var(--text)] transition-colors">
+              About
             </Link>
-            <a href="#templates" className="text-[var(--text2)] hover:text-[var(--text)] transition-colors">
-              Poster Templates
-            </a>
-            <a href="#features" className="text-[var(--text2)] hover:text-[var(--text)] transition-colors">
-              Features &amp; Capabilities
-            </a>
-            <a href="#formats" className="text-[var(--text2)] hover:text-[var(--text)] transition-colors">
-              Print Sizes &amp; Formats
-            </a>
-            <a href="#faq" className="text-[var(--text2)] hover:text-[var(--text)] transition-colors">
-              FAQ &amp; Printing Guide
-            </a>
-          </div>
+            <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">
+              Privacy
+            </Link>
+          </nav>
 
-          {/* Technology & Open Source */}
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs uppercase text-[var(--accent)] font-bold">
-              Engine &amp; Open Source
-            </span>
-            <a
+          {/* Quick Actions: GitHub + Studio Launch */}
+          <div className="flex items-center gap-3">
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               href="https://github.com/bretmuchow07/poster-maker"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--text2)] hover:text-[var(--text)] transition-colors inline-flex items-center gap-1.5"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text2)] hover:text-[var(--text)] hover:bg-[var(--surface2)] border border-[var(--border-color)] transition-colors"
+              title="View Source on GitHub"
             >
-              <Github size={13} />
-              <span>GitHub Source Repository</span>
-            </a>
-            <span className="text-[var(--text2)]">100% Client-Side Processing</span>
-            <span className="text-[var(--text2)]">HTML5 Canvas &amp; Fabric.js</span>
-            <span className="text-[var(--text2)]">No Tracking &amp; No Data Stored</span>
-            <span className="text-[var(--text2)]">300 DPI Export Standard</span>
-          </div>
+              <Github size={14} />
+            </motion.a>
 
-          {/* Legal */}
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs uppercase text-[var(--accent)] font-bold">
-              Legal &amp; Policy
-            </span>
-            <Link href="/privacy" className="text-[var(--text2)] hover:text-[var(--text)] transition-colors">
-              Privacy Policy &amp; Terms
-            </Link>
-            <p className="text-[var(--text3)] leading-relaxed mt-1">
-              Album artwork and artist trademarks remain the property of their respective copyright holders.
-            </p>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}>
+              <Link
+                href="/editor"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-medium text-[var(--bg)] bg-[var(--text)] rounded-[12px] hover:opacity-90 transition-opacity"
+              >
+                <span>Open Studio</span>
+                <ArrowUpRight size={12} />
+              </Link>
+            </motion.div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-[var(--border-color)] text-xs text-[var(--text3)]">
-          <span>
-            © {new Date().getFullYear()} PosterMaker. Free, open-source, and private music print studio.
-          </span>
+        {/* Bottom Sub-Line */}
+        <div className="flex flex-col sm:flex-row items-center justify-between text-[12px] text-[var(--text3)] gap-3">
+          <p>
+            &copy; {new Date().getFullYear()} Pressroom (PR–001). All album cover rights belong to their respective artists.
+          </p>
           <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/bretmuchow07/poster-maker"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[var(--text2)] hover:text-[var(--text)] transition-colors inline-flex items-center gap-1"
-            >
-              <Github size={13} />
-              <span>GitHub</span>
-            </a>
-            <Link href="/editor" className="text-[var(--accent)] hover:underline font-semibold">
-              Launch Studio →
-            </Link>
+            <span>300 DPI Export</span>
+            <span>•</span>
+            <span>Zero Cookies</span>
+            <span>•</span>
+            <span>Client-Side</span>
           </div>
         </div>
       </div>

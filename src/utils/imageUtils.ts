@@ -68,18 +68,18 @@ export async function applyImageEdgeFade(imageUrl: string, fadePercent: number):
       ctx.drawImage(img, 0, 0, width, height);
 
       const fraction = Math.min(Math.max(fadePercent / 100, 0.02), 0.95);
-      const fadeH = height * fraction;
-      const fadeTop = height - fadeH;
+      const solidStop = Math.max(0, 1 - fraction);
 
-      const grad = ctx.createLinearGradient(0, fadeTop, 0, height);
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
       grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
-      grad.addColorStop(0.3, 'rgba(0, 0, 0, 0.85)');
-      grad.addColorStop(0.65, 'rgba(0, 0, 0, 0.35)');
+      grad.addColorStop(solidStop, 'rgba(0, 0, 0, 1)');
+      grad.addColorStop(solidStop + fraction * 0.35, 'rgba(0, 0, 0, 0.8)');
+      grad.addColorStop(solidStop + fraction * 0.7, 'rgba(0, 0, 0, 0.35)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       ctx.globalCompositeOperation = 'destination-in';
       ctx.fillStyle = grad;
-      ctx.fillRect(0, fadeTop, width, fadeH);
+      ctx.fillRect(0, 0, width, height);
 
       resolve(canvas.toDataURL('image/png'));
     };

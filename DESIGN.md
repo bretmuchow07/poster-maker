@@ -1,15 +1,24 @@
-# PosterMaker Design System & Architecture Specification
+# Pressroom Design System & Architecture Specification
 
-> **Document Version**: 2.0.0  
+> **Document Version**: 2.3.0  
+> **Brand**: PRESSROOM — Music Print Studio (`EST. 2026` • `PR–001` • `MUSIC / ART / PRINT`)  
+> **Tagline**: *Make Music Visible.* (Alt: *Your Music. Your Wall. Your Story.*)  
 > **Target**: Physical Print, Gallery Displays, and In-Browser High-DPI Poster Rendering  
-> **Philosophy**: Grounded in authentic vinyl sleeve, tour print, and Swiss modernist drafting traditions. Zero generic AI clichés, zero rigid template traps, zero celebrity/real-people demo dependencies.
+> **Philosophy**: An independent digital print studio specialising in music-inspired artwork—grounded in authentic vinyl sleeve, tour print, and Swiss modernist drafting traditions. Zero generic AI clichés, zero rigid template traps, zero celebrity/real-people demo dependencies.
 
 ---
 
 ## 1. Visual Identity & Design Principles
 
-### A. Subject-Matter Grounding
-PosterMaker is an archival music print atelier. The interface and output are treated as physical press proofing surfaces:
+### A. Brand Mark & Lockup Usage
+Pressroom uses a registration crop-mark grid framing a vinyl disc with an amber (`#f59e0b`) tonearm bar. All in-app instances are rendered as theme-aware vector SVGs (`src/components/PressroomBrand.tsx`) using `currentColor` + `var(--accent)` so they adapt seamlessly between **Darkroom Studio** and **Gallery Light** modes without background boxes:
+- **`PressroomMark`** (`32×32` viewBox): Compact square mark; also shipped as `src/app/icon.svg` on `#f7f5f3` archival paper for browser favicons.
+- **`PressroomLockupHorizontal`** (`214×40` viewBox): Primary navigation lockup used in the landing `Header` (`h-8 sm:h-9`), `Footer` (`h-10 sm:h-11`), and `EditorLayout` toolbar (`h-7 sm:h-8`).
+- **`PressroomLockupStacked`** (`180×148` viewBox): Editorial lockup used on `/about` (`w-40 sm:w-44`) and `/privacy` (`w-32 sm:w-36`).
+- **Raster Assets (`public/brand/`)**: High-resolution JPG exports (`pressroom-mark.jpg`, `pressroom-lockup-horizontal.jpg`, `pressroom-lockup-stacked.jpg`) retained for Open Graph metadata (`layout.tsx`) and external sharing.
+
+### B. Subject-Matter Grounding
+Pressroom is an independent, editorial, tactile, and archival music print studio. The interface and output are treated as physical press proofing surfaces:
 - **Paper Canvas**: Uncoated, warm off-white, matte studio stocks (`#F5F3EE`, `#0E0E10`, `#F5A8B8`, `#141416`).
 - **Tactile Ink Hierarchy**: High-contrast grotesks paired with functional monospaces and human cursive autographs.
 - **Museum Mount**: 4-side framing borders, bleed/margin registration guides, and authentic Swiss grid alignment.
@@ -169,6 +178,8 @@ All layouts use abstract or neutral project names (*Echo Velocity*, *Studio Reco
    - Draggable & scalable album artwork object.
    - Non-destructive bottom edge fade: `applyImageEdgeFade()` bakes an alpha transparency gradient directly into an off-screen canvas, melting the bottom edge seamlessly into the poster background without floating overlays.
    - Movable Swatch Group: Extracted 5-color palette rendered as an interactive Fabric.js group (square, rounded, or circle shapes).
+   - **Parental Advisory Badge (`parental_advisory`)**: Authentic vector three-band RIAA-style `Group` (`PARENTAL` / inverted black `ADVISORY` bar / `EXPLICIT CONTENT`), draggable with smart-guide snapping, proportionally scalable, and toggleable across any archetype (`showParentalAdvisory`, defaulting to visible on `modern`).
+   - **Removable Canvas Layers**: Every selectable canvas element (artwork, artist/album typography, tracklist, swatches, signature, liner notes, label/release metadata, matrix stamp, QR code, and Parental Advisory badge) can be removed via `Delete`/`Backspace` or the contextual selection action pill. Core template elements persist in `hiddenElements` and can be restored individually via Undo (`Ctrl+Z`) or in bulk via **Restore All** in the sidebar.
 2. **Median-Cut Color Extraction**:
    - Client-side ColorThief palette sampling returns 5 dominant swatches.
    - Auto-theming calculates harmonious background and typography color pairings.
