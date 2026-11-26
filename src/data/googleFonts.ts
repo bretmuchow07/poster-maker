@@ -22,7 +22,7 @@ export const CURATED_FONT_CATEGORIES: CuratedFontCategory[] = [
         id: 'editorial',
         label: 'Editorial & Vinyl Serif',
         description: 'Timeless, elegant serifs for jazz, classical, and indie sleeves',
-        fonts: ['Playfair Display', 'Cormorant Garamond', 'DM Serif Display', 'Cinzel', 'Libre Baskerville', 'EB Garamond', 'Lora', 'Spectral', 'Prata']
+        fonts: ['Fraunces', 'Playfair Display', 'Cormorant Garamond', 'DM Serif Display', 'Cinzel', 'Libre Baskerville', 'EB Garamond', 'Lora', 'Spectral', 'Prata']
     },
     {
         id: 'mono',
@@ -38,7 +38,7 @@ export const GOOGLE_FONTS = [
     "Bebas Neue", "Bitter", "Bowlby One SC", "Bree Serif", "Cabin", "Cairo", "Cardo", "Catamaran", "Caveat",
     "Chakra Petch", "Changa", "Cinzel", "Comfortaa", "Concert One", "Cormorant", "Cormorant Garamond",
     "Crimson Text", "Cuprum", "Dancing Script", "Didact Gothic", "DM Sans", "DM Serif Display", "Dosis",
-    "EB Garamond", "Eczar", "El Messiri", "Exo", "Exo 2", "Fira Sans", "Fira Sans Condensed", "Fjalla One",
+    "EB Garamond", "Eczar", "El Messiri", "Exo", "Exo 2", "Fira Sans", "Fira Sans Condensed", "Fjalla One", "Fraunces",
     "Francois One", "Frank Ruhl Libre", "Fredoka One", "Glegoo", "Gloria Hallelujah", "Great Vibes",
     "Heebo", "Hind", "Hind Madurai", "Hind Siliguri", "IBM Plex Mono", "IBM Plex Sans", "IBM Plex Sans Condensed",
     "IBM Plex Serif", "Inconsolata", "Indie Flower", "Inter", "Josefin Sans", "Josefin Slab", "Kanit",

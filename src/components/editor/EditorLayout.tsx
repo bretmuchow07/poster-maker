@@ -10,6 +10,7 @@ import { usePosterStore } from '@/store/posterStore';
 import { PosterGallery } from '../PosterGallery';
 import { Settings } from '../Settings';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { PressroomLockupHorizontal } from '@/components/PressroomBrand';
 import {
     LayoutGrid,
     Settings as SettingsIcon,
@@ -23,7 +24,9 @@ import {
     Printer,
     ShieldCheck,
     Sliders,
-    Github
+    Github,
+    RotateCcw,
+    FilePlus2
 } from 'lucide-react';
 
 const CanvasArea = dynamic(() => import('./CanvasArea').then(m => m.CanvasArea), {
@@ -54,11 +57,15 @@ export default function EditorLayout() {
         canUndo,
         canRedo,
         saveStatus,
-        lastSavedTime
+        lastSavedTime,
+        createNewPoster,
+        loadPoster
     } = usePosterStore();
 
     const [isExportOpen, setIsExportOpen] = useState(false);
+    const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
     const exportMenuRef = useRef<HTMLDivElement>(null);
+    const resetMenuRef = useRef<HTMLDivElement>(null);
     const searchParams = useSearchParams();
     const hasIngestedParams = useRef(false);
 
@@ -71,8 +78,19 @@ export default function EditorLayout() {
 
         if (tpl || artist || album) {
             hasIngestedParams.current = true;
-            if (tpl && ['modern', 'palette', 'minimal', 'split'].includes(tpl)) {
-                setConfig({ template: tpl as 'modern' | 'palette' | 'minimal' | 'split' });
+            if (tpl && ['modern', 'palette', 'minimal', 'split', 'cosmos'].includes(tpl)) {
+                if (tpl === 'cosmos') {
+                    setConfig({
+                        template: 'cosmos',
+                        fontFamily: 'Fraunces',
+                        backgroundColor: '#f7f5f3',
+                        textColor: '#0d0d0d',
+                        albumFontWeight: 300,
+                        artistFontWeight: 400,
+                    });
+                } else {
+                    setConfig({ template: tpl as 'modern' | 'palette' | 'minimal' | 'split' | 'cosmos' });
+                }
             }
             if (artist || album) {
                 usePosterStore.getState().setMetadata({
@@ -104,6 +122,9 @@ export default function EditorLayout() {
             } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
                 savePoster();
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                setIsExportOpen(prev => !prev);
             }
         };
 
@@ -111,18 +132,21 @@ export default function EditorLayout() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [undo, redo, savePoster]);
 
-    // Close export popover on outside click
+    // Close export & reset popovers on outside click
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
                 setIsExportOpen(false);
             }
+            if (resetMenuRef.current && !resetMenuRef.current.contains(e.target as Node)) {
+                setIsResetConfirmOpen(false);
+            }
         };
-        if (isExportOpen) {
+        if (isExportOpen || isResetConfirmOpen) {
             document.addEventListener('mousedown', handleClickOutside);
         }
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isExportOpen]);
+    }, [isExportOpen, isResetConfirmOpen]);
 
     const renderContent = () => {
         switch (view) {
@@ -146,10 +170,10 @@ export default function EditorLayout() {
                 <div className="flex items-center gap-2">
                     <Link
                         href="/"
-                        className="brand select-none hover:opacity-80 transition-opacity"
-                        title="Return to Homepage"
+                        className="flex items-center text-[var(--text)] select-none hover:opacity-80 transition-opacity shrink-0 mr-1"
+                        title="Pressroom — Music Print Studio"
                     >
-                        Poster<span>Maker</span>
+                        <PressroomLockupHorizontal className="h-7 sm:h-8 w-auto" />
                     </Link>
 
                     <div className="divider" />
@@ -251,6 +275,66 @@ export default function EditorLayout() {
                             </div>
                         )}
 
+                        <div className="relative" ref={resetMenuRef}>
+                            <button
+                                onClick={() => setIsResetConfirmOpen(prev => !prev)}
+                                className="btn"
+                                title="Abandon changes or start a fresh poster"
+                            >
+                                <FilePlus2 size={14} />
+                                <span className="hidden sm:inline">Start Fresh</span>
+                            </button>
+
+                            {isResetConfirmOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-72 bg-[var(--surface)] border border-[var(--border-color)] rounded-xl shadow-2xl p-4 z-50 text-xs animate-fade-in space-y-3">
+                                    <div className="space-y-1">
+                                        <div className="font-semibold text-[var(--text)]">
+                                            {currentPosterId ? 'Abandon changes or start fresh?' : 'Start a fresh poster?'}
+                                        </div>
+                                        <p className="text-[11px] text-[var(--text2)] leading-relaxed">
+                                            {currentPosterId
+                                                ? 'Revert to your last saved version, or clear the canvas for a brand-new design.'
+                                                : 'This clears the current artwork, tracklist, and custom layout positions.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5 pt-1">
+                                        {currentPosterId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    loadPoster(currentPosterId);
+                                                    setIsResetConfirmOpen(false);
+                                                }}
+                                                className="w-full py-2 px-3 rounded-lg bg-[var(--surface2)] hover:bg-[var(--surface3)] text-[var(--text)] border border-[var(--border-color)] font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                                            >
+                                                <RotateCcw size={13} />
+                                                <span>Abandon Unsaved Changes</span>
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                createNewPoster();
+                                                setIsResetConfirmOpen(false);
+                                            }}
+                                            className="w-full py-2 px-3 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                                        >
+                                            <FilePlus2 size={13} />
+                                            <span>{currentPosterId ? 'Start Fresh Blank Poster' : 'Abandon & Start Fresh'}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsResetConfirmOpen(false)}
+                                            className="w-full py-1.5 px-3 rounded-lg text-[var(--text3)] hover:text-[var(--text)] font-medium transition-colors cursor-pointer"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <button
                             onClick={savePoster}
                             className="btn"
@@ -265,7 +349,7 @@ export default function EditorLayout() {
                             <button
                                 onClick={() => setIsExportOpen(!isExportOpen)}
                                 className="btn btn-primary"
-                                title="Export print-ready file"
+                                title="Export print-ready file (Ctrl+E)"
                             >
                                 <Download size={14} />
                                 <span>Export</span>
@@ -287,14 +371,20 @@ export default function EditorLayout() {
                                     {/* Format Selection */}
                                     <div>
                                         <label className="text-[11px] font-medium text-[var(--text2)] block mb-1.5">File Format</label>
-                                        <div className="grid grid-cols-3 gap-1.5">
-                                            {(['png', 'jpg', 'pdf'] as const).map(fmt => (
+                                        <div className="grid grid-cols-4 gap-1.5">
+                                            {(['png', 'jpg', 'pdf', 'svg'] as const).map(fmt => (
                                                 <button
                                                     key={fmt}
                                                     onClick={() => setConfig({ exportFormat: fmt })}
-                                                    className={`py-1.5 px-2 text-center rounded-md font-medium uppercase text-[11px] border transition-all ${config.exportFormat === fmt ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-[var(--surface2)] text-[var(--text2)] border-[var(--border-color)] hover:border-[var(--border-hover)]'}`}
+                                                    className={`py-1.5 px-2 text-center rounded-md font-medium uppercase text-[11px] border transition-all flex flex-col items-center justify-center ${config.exportFormat === fmt ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-[var(--surface2)] text-[var(--text2)] border-[var(--border-color)] hover:border-[var(--border-hover)]'}`}
+                                                    title={fmt === 'svg' ? 'Vector SVG (Infinite Resolution Print)' : fmt.toUpperCase()}
                                                 >
-                                                    {fmt}
+                                                    <span>{fmt}</span>
+                                                    {fmt === 'svg' && (
+                                                        <span className={`text-[8px] tracking-wider px-1 py-0.2 rounded font-bold ${config.exportFormat === 'svg' ? 'bg-white/20 text-white' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'}`}>
+                                                            VEC
+                                                        </span>
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>
@@ -378,7 +468,7 @@ export default function EditorLayout() {
                 <div className="flex items-center gap-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-[var(--accent)]" />
                     <span className="font-semibold text-[var(--text)]">
-                        {view === 'editor' ? 'Poster Studio' : view === 'gallery' ? 'My Posters' : 'Settings'}
+                        {view === 'editor' ? 'Pressroom Studio' : view === 'gallery' ? 'My Prints' : 'Settings'}
                     </span>
                     {view === 'editor' && (
                         <>

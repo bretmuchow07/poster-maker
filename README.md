@@ -1,18 +1,32 @@
-# PosterMaker
+# Pressroom — Music Print Studio
 
-A professional, privacy-first web application for designing iconic album posters. Create print-ready artwork directly in your browser with zero data collection, zero accounts, and zero watermarks.
+**Make Music Visible.** An independent, privacy-first music print studio for turning the albums you love into prints worth keeping. Create print-ready artwork directly in your browser with zero data collection, zero accounts, and zero watermarks.
 
-![PosterMaker Cover](public/screenshot.png)
+![Pressroom Cover](public/brand/pressroom-lockup-horizontal.jpg)
+
+---
+
+## Brand Identity & Assets
+
+- **Name**: **PRESSROOM** (`PR–001` • `EST. 2026` • `MUSIC / ART / PRINT`)
+- **Descriptor**: Music Print Studio
+- **Primary Tagline**: *Make Music Visible.* (*Alt: Your Music. Your Wall. Your Story.*)
+- **Theme-Aware Vector System** ([`src/components/PressroomBrand.tsx`](src/components/PressroomBrand.tsx)):
+  - `PressroomMark` — Registration crop-mark grid, vinyl disc, and studio amber (`#f59e0b`) tonearm bar.
+  - `PressroomLockupHorizontal` — Used in the landing header (`Header.tsx`), footer (`Footer.tsx`), and editor toolbar (`EditorLayout.tsx`).
+  - `PressroomLockupStacked` — Used on [`/about`](src/app/about/page.tsx) and [`/privacy`](src/app/privacy/page.tsx).
+- **App Icon & Raster Assets**: [`src/app/icon.svg`](src/app/icon.svg) powers the browser favicon; [`public/brand/`](public/brand/) stores high-res raster lockups for Open Graph metadata and static sharing.
 
 ---
 
 ## Features
 
-### 🎨 4 Iconic Layout Archetypes
-- **Swiss Palette Grid**: Structured 2-column modernist layout with framed artwork, 5 extracted color swatches, ordered tracklist, and signature layer.
-- **Brutalist Inset Rule**: Monochromatic editorial paper framed by a fine hairline rule with inline slashed tracklist and high-impact grotesque typography.
-- **Cinematic Split**: Upper photographic bleed blending into deep tone paper via baked alpha bottom fade, paired with kinetic blur title echo.
-- **Modern Studio**: Edge-to-edge dominant artwork with stacked artist titles, streaming QR code, and parental advisory badge.
+### 🎨 5 Iconic Layout Archetypes
+- **Archival Linen Atelier (`cosmos`)**: Unprimed linen canvas, optical serif typography, 8-dot registration mark, and 5-swatch palette row.
+- **Swiss Palette Grid (`palette`)**: Structured 2-column modernist layout with framed artwork, 5 extracted color swatches, ordered tracklist, and signature layer.
+- **Brutalist Inset Rule (`minimal`)**: Monochromatic editorial paper framed by a fine hairline rule with inline slashed tracklist and high-impact grotesque typography.
+- **Cinematic Split (`split`)**: Upper photographic bleed blending into deep tone paper via baked alpha bottom fade, paired with kinetic blur title echo.
+- **Modern Studio (`modern`)**: Edge-to-edge dominant artwork with stacked artist titles, streaming QR code, and movable/resizable RIAA Parental Advisory badge.
 - **Deep-Link Launch**: Launch the editor with pre-loaded archetypes and project parameters via URL (e.g. `/editor?template=palette&artist=Echo+Velocity&album=Neo-Construct+04`).
 
 ### 🎵 Smart Music Import & Auto-Theming
@@ -20,8 +34,10 @@ A professional, privacy-first web application for designing iconic album posters
 - **5-Color Palette Extraction**: Samples uploaded artwork using client-side median-cut color quantization (ColorThief) to extract 5 dominant swatches.
 - **Movable Swatch Group**: Drag, reposition, or restyle color swatches on the canvas with support for square, rounded, or circular shapes.
 
-### 🖼️ Interactive Canvas & Blending
-- **On-Canvas Drag & Scale**: Direct manipulation of cover artwork and layout layers via Fabric.js 7.1.
+### 🖼️ Interactive Canvas, Removal & Reset
+- **On-Canvas Drag & Scale**: Direct manipulation of cover artwork, typography, QR codes, and the Parental Advisory badge via Fabric.js 7.1 with studio amber smart-snap guides.
+- **Removable Canvas Layers**: Select any item and press `Delete`/`Backspace` or click **Remove** in the floating action bar; restore anytime with Undo (`Ctrl+Z`) or **Restore All** in the sidebar.
+- **Start Fresh / Abandon Changes**: Revert unsaved edits to the last saved version or clear the canvas for a fresh poster from the editor toolbar.
 - **Non-Destructive Edge Blending**: Baked alpha bottom fade gradient melts cover artwork smoothly into the poster background without floating overlay glitches.
 
 ### 🖨️ 300 DPI Print-Ready Export
@@ -105,22 +121,28 @@ npm start
 
 ```
 poster/
-├── public/                 # Static assets and fonts
+├── public/
+│   ├── brand/              # Raster Pressroom mark & lockups (OG/sharing)
+│   ├── examples/           # Rendered poster previews for landing archetypes
+│   └── reel/               # Studio Reel workflow captures
 ├── src/
 │   ├── app/                # Next.js App Router pages
-│   │   ├── page.tsx        # Modern studio landing page
+│   │   ├── page.tsx        # Pressroom landing page & Studio Reel
 │   │   ├── layout.tsx      # Root layout, FOUT theme script & metadata
+│   │   ├── icon.svg        # Pressroom browser favicon
 │   │   ├── globals.css     # CSS custom properties & theme tokens
 │   │   ├── editor/         # Studio canvas editor route
+│   │   ├── about/          # Studio overview & brand story
 │   │   └── privacy/        # Privacy policy & terms
 │   ├── components/
-│   │   ├── landing/        # Header, Hero, Templates, Features, Specs, FAQ, Footer
-│   │   ├── editor/         # EditorLayout, CanvasArea, Sidebar, Toolbar
+│   │   ├── PressroomBrand.tsx # Theme-aware SVG mark & lockups
+│   │   ├── landing/        # Header, Hero, StudioReel, Templates, Features, Specs, FAQ, Footer
+│   │   ├── editor/         # EditorLayout, CanvasArea, Sidebar, AlbumSearchModal
 │   │   ├── ThemeToggle.tsx # Accessible Sun/Moon switch
 │   │   └── ThemeProvider.tsx # Client-side theme synchronization
 │   ├── store/
 │   │   └── posterStore.ts  # Zustand store with persistent state & undo/redo
-│   └── types/              # TypeScript interfaces and canvas models
+│   └── utils/              # Color, image fade, typography & dimension helpers
 ├── DESIGN.md               # Architecture specification and design tokens
 └── README.md               # Project documentation
 ```

@@ -31,8 +31,11 @@ import {
     FileText,
     Lock,
     Unlock,
-    RotateCcw
+    RotateCcw,
+    Disc,
+    ShieldAlert
 } from 'lucide-react';
+import { AlbumSearchModal } from './AlbumSearchModal';
 
 export function Sidebar() {
     const {
@@ -40,7 +43,8 @@ export function Sidebar() {
         config, setConfig,
         addTrack, removeTrack, updateTrack, importTracklist,
         updatePrintConfig, updateQrCodeConfig,
-        updateSignatureConfig, updateFrameBorderConfig, updateLinerNotesConfig
+        updateSignatureConfig, updateFrameBorderConfig, updateLinerNotesConfig,
+        updateMatrixStampConfig
     } = usePosterStore();
 
     // Accordion active sections
@@ -59,6 +63,9 @@ export function Sidebar() {
     const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
     const [pasteText, setPasteText] = useState('');
     const [pasteFeedback, setPasteFeedback] = useState<string | null>(null);
+
+    // Instant Album Search & Auto-Fill Modal state
+    const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
     // Font Drawer state
     const [isFontDrawerOpen, setIsFontDrawerOpen] = useState(false);
@@ -84,12 +91,18 @@ export function Sidebar() {
             updatePrintConfig({ preset: 'custom' });
             return;
         }
-        // @ts-ignore
-        const preset = PRINT_PRESETS[presetKey];
+        const preset = (PRINT_PRESETS as any)[presetKey];
         if (preset) {
-            const dpi = 72;
-            const w = Math.round((preset.widthMm / 25.4) * dpi);
-            const h = Math.round((preset.heightMm / 25.4) * dpi);
+            let w: number;
+            let h: number;
+            if (preset.defaultPx) {
+                w = preset.defaultPx.width;
+                h = preset.defaultPx.height;
+            } else {
+                const dpi = 72;
+                w = Math.round((preset.widthMm / 25.4) * dpi);
+                h = Math.round((preset.heightMm / 25.4) * dpi);
+            }
 
             setConfig({ width: w, height: h });
             updatePrintConfig({ preset: presetKey as any });
@@ -114,6 +127,22 @@ export function Sidebar() {
 
                 {openSections.artwork && (
                     <div className="mt-3.5 space-y-3.5 text-xs animate-fade-in">
+                        {/* Instant Music Search & Auto-Fill */}
+                        <div>
+                            <button
+                                onClick={() => setIsSearchModalOpen(true)}
+                                className="btn btn-primary w-full py-2.5 shadow-sm flex items-center justify-center gap-2 font-semibold text-xs tracking-wide group"
+                            >
+                                <Disc size={15} className="group-hover:rotate-45 transition-transform" />
+                                <span>Search Album & Auto-Fill</span>
+                            </button>
+                            <div className="flex items-center gap-2 my-2 text-[10px] text-[var(--text3)] justify-center">
+                                <span className="h-[1px] bg-[var(--border-color)] flex-1" />
+                                <span>or upload manually</span>
+                                <span className="h-[1px] bg-[var(--border-color)] flex-1" />
+                            </div>
+                        </div>
+
                         {/* Image Upload Area */}
                         <div>
                             <label className="text-[11px] font-medium text-[var(--text2)] block mb-1.5">Album Artwork</label>
@@ -475,13 +504,60 @@ export function Sidebar() {
                             </div>
                         </div>
 
+                        {/* Reset Dragged Positions if any are active */}
+                        {(config.artistPosition || config.albumPosition || config.tracklistPosition || config.signaturePosition || config.linerNotesPosition || config.labelPosition || config.releaseDatePosition || config.matrixStampPosition || config.qrCodePosition || config.parentalAdvisoryPosition || config.parentalAdvisoryScale) && (
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--surface2)]/60 border border-[var(--border-color)]">
+                                <span className="text-[10px] text-[var(--text2)]">Custom canvas positions active</span>
+                                <button
+                                    onClick={() => setConfig({
+                                        artistPosition: undefined,
+                                        albumPosition: undefined,
+                                        tracklistPosition: undefined,
+                                        signaturePosition: undefined,
+                                        linerNotesPosition: undefined,
+                                        labelPosition: undefined,
+                                        releaseDatePosition: undefined,
+                                        matrixStampPosition: undefined,
+                                        qrCodePosition: undefined,
+                                        parentalAdvisoryPosition: undefined,
+                                        parentalAdvisoryScale: undefined,
+                                        labelFontSize: undefined,
+                                        releaseDateFontSize: undefined
+                                    })}
+                                    className="px-2 py-0.5 text-[9px] rounded bg-[var(--surface3)] hover:bg-[var(--accent)] hover:text-black text-[var(--text)] flex items-center gap-1 font-medium transition-colors"
+                                    title="Reset dragged text positions back to archetype grid"
+                                >
+                                    <RotateCcw size={9} />
+                                    <span>Reset Grid</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Restore Removed Canvas Items */}
+                        {(config.hiddenElements?.length || 0) > 0 && (
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--surface2)]/60 border border-[var(--border-color)]">
+                                <span className="text-[10px] text-[var(--text2)]">
+                                    {config.hiddenElements!.length} canvas {config.hiddenElements!.length === 1 ? 'item' : 'items'} removed
+                                </span>
+                                <button
+                                    onClick={() => setConfig({ hiddenElements: [] })}
+                                    className="px-2 py-0.5 text-[9px] rounded bg-[var(--surface3)] hover:bg-[var(--accent)] hover:text-black text-[var(--text)] flex items-center gap-1 font-medium transition-colors"
+                                    title="Restore all removed canvas items"
+                                >
+                                    <RotateCcw size={9} />
+                                    <span>Restore All</span>
+                                </button>
+                            </div>
+                        )}
+
                         {/* Tracklist Layout Flow */}
                         <div className="pt-2 border-t border-[var(--border-color)]">
                             <label className="text-[11px] font-medium text-[var(--text2)] block mb-1.5">Tracklist Flow Mode</label>
-                            <div className="grid grid-cols-3 gap-1.5">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {[
                                     { id: 'single', name: 'Single Column' },
-                                    { id: 'double', name: '2 Columns' },
+                                    { id: 'double', name: '2 Balanced Columns' },
+                                    { id: 'vinyl-sides', name: 'Vinyl Side A / Side B' },
                                     { id: 'inline', name: 'Slashed Inline' },
                                 ].map((flow) => (
                                     <button
@@ -493,6 +569,43 @@ export function Sidebar() {
                                     </button>
                                 ))}
                             </div>
+                        </div>
+
+                        {/* Tracklist Indentation */}
+                        <div className="pt-2 border-t border-[var(--border-color)]">
+                            <div className="flex justify-between items-center text-[11px] text-[var(--text2)] mb-1">
+                                <span className="font-medium">Tracklist Left Indentation</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="font-mono text-[var(--text3)]">{config.tracklistIndent || 0}px</span>
+                                    {(config.tracklistIndent || 0) > 0 && (
+                                        <button
+                                            onClick={() => setConfig({
+                                                tracklistIndent: 0,
+                                                tracklistPosition: config.tracklistPosition ? { ...config.tracklistPosition, left: undefined as any } : undefined
+                                            })}
+                                            className="text-[9px] text-[var(--accent)] hover:underline"
+                                            title="Reset Indentation"
+                                        >
+                                            Reset
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="160"
+                                step="2"
+                                value={config.tracklistIndent || 0}
+                                onChange={(e) => {
+                                    const indent = parseInt(e.target.value) || 0;
+                                    setConfig({
+                                        tracklistIndent: indent,
+                                        tracklistPosition: config.tracklistPosition ? { ...config.tracklistPosition, left: undefined as any } : undefined
+                                    });
+                                }}
+                                className="w-full accent-[var(--accent)] h-1.5 bg-[var(--surface2)] rounded-lg cursor-pointer"
+                            />
                         </div>
 
                         {/* Liner Notes & Production Credits */}
@@ -525,6 +638,14 @@ export function Sidebar() {
                                     Tracks ({metadata.tracks.length})
                                 </span>
                                 <div className="flex gap-1.5">
+                                    <button
+                                        onClick={() => setIsSearchModalOpen(true)}
+                                        className="btn py-1 px-2 text-[10px] flex items-center gap-1 font-medium bg-[var(--surface2)] hover:bg-[var(--surface-elevated)]"
+                                        title="Search album & auto-import tracklist"
+                                    >
+                                        <Disc size={11} className="text-[var(--accent)]" />
+                                        <span>Auto-Fill</span>
+                                    </button>
                                     <button
                                         onClick={() => setIsPasteModalOpen(true)}
                                         className="btn py-1 px-2 text-[10px] flex items-center gap-1 font-medium bg-[var(--surface2)] hover:bg-[var(--surface-elevated)]"
@@ -590,13 +711,146 @@ export function Sidebar() {
                             </label>
 
                             {config.qrCode?.visible && (
+                                <div className="space-y-2 p-2 bg-[var(--surface2)]/40 rounded-lg border border-[var(--border-color)]">
+                                    <input
+                                        type="url"
+                                        className="inp text-[11px] w-full"
+                                        placeholder="https://open.spotify.com/album/..."
+                                        value={config.qrCode.url || ''}
+                                        onChange={(e) => updateQrCodeConfig({ url: e.target.value })}
+                                    />
+                                    <div>
+                                        <div className="flex justify-between text-[10px] text-[var(--text2)] mb-1">
+                                            <span>Placement Anchor</span>
+                                            {config.qrCodePosition && (
+                                                <button
+                                                    onClick={() => setConfig({ qrCodePosition: undefined })}
+                                                    className="text-[9px] text-[var(--accent)] hover:underline flex items-center gap-1"
+                                                >
+                                                    <RotateCcw size={8} />
+                                                    <span>Reset to Anchor</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-1">
+                                            {[
+                                                { id: 'auto', label: 'Auto' },
+                                                { id: 'bottom-right', label: 'Right' },
+                                                { id: 'bottom-left', label: 'Left' },
+                                                { id: 'badge-dock', label: 'Dock' },
+                                            ].map((dock) => (
+                                                <button
+                                                    key={dock.id}
+                                                    type="button"
+                                                    onClick={() => setConfig({ qrCodeAnchor: dock.id as any, qrCodePosition: undefined })}
+                                                    className={`py-1 text-[10px] rounded border transition-colors ${(config.qrCodeAnchor || 'auto') === dock.id ? 'bg-[var(--accent)] text-black font-bold border-[var(--accent)]' : 'bg-[var(--surface)] text-[var(--text2)] border-[var(--border-color)]'}`}
+                                                >
+                                                    {dock.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] text-[var(--text2)] pt-1">
+                                        <span>Badge Size</span>
+                                        <span className="font-mono">{config.qrCode.size || 76}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="54"
+                                        max="110"
+                                        step="2"
+                                        value={config.qrCode.size || 76}
+                                        onChange={(e) => updateQrCodeConfig({ size: parseInt(e.target.value) })}
+                                        className="w-full accent-[var(--accent)] h-1.5 bg-[var(--surface2)] rounded-lg cursor-pointer"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Vinyl Runout Matrix Stamp */}
+                        <div className="pt-2 border-t border-[var(--border-color)] space-y-2">
+                            <label className="flex items-center gap-2 text-[11px] text-[var(--text)] cursor-pointer select-none">
                                 <input
-                                    type="url"
-                                    className="inp text-[11px] w-full"
-                                    placeholder="https://open.spotify.com/album/..."
-                                    value={config.qrCode.url || ''}
-                                    onChange={(e) => updateQrCodeConfig({ url: e.target.value })}
+                                    type="checkbox"
+                                    checked={config.matrixStamp?.visible ?? false}
+                                    onChange={(e) => updateMatrixStampConfig({ visible: e.target.checked })}
+                                    className="rounded accent-[var(--accent)]"
                                 />
+                                <span className="flex items-center gap-1.5">
+                                    <Disc size={13} className="text-[var(--accent)]" />
+                                    <span className="font-medium">Runout Matrix Stamp (Vinyl Press)</span>
+                                </span>
+                            </label>
+
+                            {config.matrixStamp?.visible && (
+                                <div className="space-y-2 p-2 bg-[var(--surface2)]/40 rounded-lg border border-[var(--border-color)]">
+                                    <input
+                                        type="text"
+                                        className="inp text-[10px] font-mono w-full"
+                                        placeholder={`MATRIX: ${metadata.label ? metadata.label.slice(0, 3).toUpperCase() : 'PR'}-${metadata.year || '26'}-01 • STEREO`}
+                                        value={config.matrixStamp.text || ''}
+                                        onChange={(e) => updateMatrixStampConfig({ text: e.target.value })}
+                                    />
+                                    <div className="flex gap-2">
+                                        {(['33⅓ RPM', '45 RPM'] as const).map(speed => (
+                                            <button
+                                                key={speed}
+                                                type="button"
+                                                onClick={() => updateMatrixStampConfig({ speed })}
+                                                className={`flex-1 py-1 text-[10px] rounded border transition-colors ${config.matrixStamp?.speed === speed ? 'bg-[var(--accent)] text-black font-bold border-[var(--accent)]' : 'bg-[var(--surface)] text-[var(--text2)] border-[var(--border-color)]'}`}
+                                            >
+                                                {speed}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Parental Advisory Badge */}
+                        <div className="pt-2 border-t border-[var(--border-color)] space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="flex items-center gap-2 text-[11px] text-[var(--text)] cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={config.showParentalAdvisory ?? (config.template === 'modern')}
+                                        onChange={(e) => setConfig({ showParentalAdvisory: e.target.checked })}
+                                        className="rounded accent-[var(--accent)]"
+                                    />
+                                    <span className="flex items-center gap-1.5">
+                                        <ShieldAlert size={13} className="text-[var(--accent)]" />
+                                        <span className="font-medium">Parental Advisory Badge</span>
+                                    </span>
+                                </label>
+                                {(config.parentalAdvisoryPosition || config.parentalAdvisoryScale) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setConfig({ parentalAdvisoryPosition: undefined, parentalAdvisoryScale: undefined })}
+                                        className="text-[9px] text-[var(--accent)] hover:underline flex items-center gap-1"
+                                    >
+                                        <RotateCcw size={8} />
+                                        <span>Reset</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {(config.showParentalAdvisory ?? (config.template === 'modern')) && (
+                                <div className="grid grid-cols-3 gap-1 p-2 bg-[var(--surface2)]/40 rounded-lg border border-[var(--border-color)]">
+                                    {[
+                                        { id: 'classic', label: 'Classic' },
+                                        { id: 'inverted', label: 'Inverted' },
+                                        { id: 'match-ink', label: 'Match Ink' },
+                                    ].map((opt) => (
+                                        <button
+                                            key={opt.id}
+                                            type="button"
+                                            onClick={() => setConfig({ parentalAdvisoryStyle: opt.id as 'classic' | 'inverted' | 'match-ink' })}
+                                            className={`py-1 text-[10px] rounded border transition-colors ${(config.parentalAdvisoryStyle || 'classic') === opt.id ? 'bg-[var(--accent)] text-black font-bold border-[var(--accent)]' : 'bg-[var(--surface)] text-[var(--text2)] border-[var(--border-color)]'}`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -628,10 +882,45 @@ export function Sidebar() {
                                     { id: 'palette', name: 'Color Swatch', desc: 'Asymmetric 2-column grid with 5 extracted swatches' },
                                     { id: 'minimal', name: 'Editorial Framing', desc: 'Framed artwork with hairline inset border & slashed tracklist' },
                                     { id: 'split', name: 'Split Studio', desc: 'Cinematic split balance with 2-col tracks' },
+                                    { id: 'cosmos', name: 'Archival Linen', desc: 'Warm unprimed linen with optical serif & polaroid mount' },
                                 ].map((tpl) => (
                                     <button
                                         key={tpl.id}
-                                        onClick={() => setConfig({ template: tpl.id as any })}
+                                        onClick={() => {
+                                            const resetLayout = {
+                                                artistPosition: undefined,
+                                                albumPosition: undefined,
+                                                tracklistPosition: undefined,
+                                                swatchesPosition: undefined,
+                                                signaturePosition: undefined,
+                                                linerNotesPosition: undefined,
+                                                labelPosition: undefined,
+                                                releaseDatePosition: undefined,
+                                                parentalAdvisoryPosition: undefined,
+                                                parentalAdvisoryScale: undefined,
+                                                labelFontSize: undefined,
+                                                releaseDateFontSize: undefined,
+                                                imageOffsetX: 0,
+                                                imageOffsetY: 0,
+                                                imageScale: 1
+                                            };
+                                            if (tpl.id === 'cosmos') {
+                                                setConfig({
+                                                    ...resetLayout,
+                                                    template: 'cosmos',
+                                                    fontFamily: 'Fraunces',
+                                                    backgroundColor: '#f7f5f3',
+                                                    textColor: '#0d0d0d',
+                                                    albumFontWeight: 300,
+                                                    artistFontWeight: 400,
+                                                });
+                                            } else {
+                                                setConfig({
+                                                    ...resetLayout,
+                                                    template: tpl.id as any
+                                                });
+                                            }
+                                        }}
                                         className={`p-2.5 rounded-lg border text-left transition-all ${config.template === tpl.id ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--text)] shadow-xs' : 'border-[var(--border-color)] bg-[var(--surface2)]/40 hover:border-[var(--border-hover)]'}`}
                                     >
                                         <div className="font-semibold text-[11px] text-[var(--text)]">{tpl.name}</div>
@@ -742,7 +1031,20 @@ export function Sidebar() {
                             ].map((item) => (
                                 <div key={item.label} className="space-y-1.5 p-2 bg-[var(--surface2)]/40 rounded-lg border border-[var(--border-color)]">
                                     <div className="flex justify-between items-center">
-                                        <span className="font-semibold text-[11px] text-[var(--text)]">{item.label}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-[11px] text-[var(--text)]">{item.label}</span>
+                                            {item.label === 'Album Title' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setConfig({ autoFitTitle: true })}
+                                                    className={`text-[9px] px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors ${config.autoFitTitle !== false ? 'bg-[var(--accent)]/15 text-[var(--accent)] font-medium' : 'bg-[var(--surface2)] text-[var(--text3)] hover:text-[var(--text)]'}`}
+                                                    title="Automatically scale title font size to fit harmoniously within 2 lines"
+                                                >
+                                                    <Sparkles size={10} />
+                                                    <span>Auto-Fit</span>
+                                                </button>
+                                            )}
+                                        </div>
                                         <span className="font-mono text-[10px] text-[var(--text3)]">
                                             {(config as any)[item.sizeKey] || item.defaultSize}px
                                         </span>
@@ -755,7 +1057,14 @@ export function Sidebar() {
                                                 min="10"
                                                 max="160"
                                                 value={(config as any)[item.sizeKey] || item.defaultSize}
-                                                onChange={(e) => setConfig({ [item.sizeKey]: parseInt(e.target.value) })}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (item.label === 'Album Title') {
+                                                        setConfig({ albumFontSize: val, autoFitTitle: false });
+                                                    } else {
+                                                        setConfig({ [item.sizeKey]: val });
+                                                    }
+                                                }}
                                                 className="w-full accent-[var(--accent)] h-1.5 bg-[var(--surface2)] rounded-lg cursor-pointer"
                                             />
                                         </div>
@@ -777,7 +1086,17 @@ export function Sidebar() {
                                         {(['left', 'center', 'right'] as const).map((align) => (
                                             <button
                                                 key={align}
-                                                onClick={() => setConfig({ [item.alignKey]: align })}
+                                                onClick={() => {
+                                                    const posKey = item.label === 'Artist Title' ? 'artistPosition'
+                                                                 : item.label === 'Album Title' ? 'albumPosition'
+                                                                 : 'tracklistPosition';
+                                                    const currentPos = (config as any)[posKey];
+                                                    setConfig({
+                                                        [item.alignKey]: align,
+                                                        // Reset horizontal drag offset so alignment snaps cleanly to the margin/center
+                                                        [posKey]: currentPos ? { ...currentPos, left: undefined } : undefined
+                                                    });
+                                                }}
                                                 className={`flex-1 p-1 flex justify-center hover:bg-[var(--surface2)] transition-colors ${(config as any)[item.alignKey] === align ? 'bg-[var(--accent)]/15 text-[var(--accent)] font-semibold' : 'text-[var(--text3)]'}`}
                                                 aria-label={`Align ${item.label} ${align}`}
                                             >
@@ -819,14 +1138,26 @@ export function Sidebar() {
                                 onChange={(e) => applyPreset(e.target.value)}
                             >
                                 <option value="custom">Custom Dimensions (px)</option>
+                                <optgroup label="Vinyl & Collector Sleeves">
+                                    <option value="vinyl12">12″ LP Vinyl Sleeve (305 × 305 mm)</option>
+                                    <option value="vinyl7">7″ 45 RPM Single (178 × 178 mm)</option>
+                                </optgroup>
+                                <optgroup label="Gallery & Wall Frames">
+                                    <option value="frame18x24">18 × 24″ Gallery Frame (457 × 610 mm)</option>
+                                    <option value="frame24x36">24 × 36″ Large Format (610 × 914 mm)</option>
+                                </optgroup>
                                 <optgroup label="Standard ISO Posters">
                                     <option value="a2">A2 (420 × 594 mm)</option>
                                     <option value="a3">A3 (297 × 420 mm) — Most Popular</option>
                                     <option value="a4">A4 (210 × 297 mm)</option>
                                 </optgroup>
-                                <optgroup label="North American Print">
+                                <optgroup label="North American Paper">
                                     <option value="tabloid">Tabloid (11 × 17 in)</option>
                                     <option value="letter">Letter (8.5 × 11 in)</option>
+                                </optgroup>
+                                <optgroup label="Digital & Social Formats">
+                                    <option value="instagram">Instagram 4:5 Portrait</option>
+                                    <option value="story">Story / Mobile Wallpaper (9:16)</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -1028,6 +1359,12 @@ export function Sidebar() {
                     </div>
                 </div>
             )}
+
+            {/* Instant Album Search & Auto-Fill Modal */}
+            <AlbumSearchModal
+                isOpen={isSearchModalOpen}
+                onClose={() => setIsSearchModalOpen(false)}
+            />
         </div>
     );
 }

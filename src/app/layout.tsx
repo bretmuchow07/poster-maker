@@ -4,8 +4,16 @@ import { GlobalLoading } from "@/components/GlobalLoading";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "PosterMaker — Iconic Album Poster Studio",
-  description: "A professional, privacy-first web application for designing iconic album posters. Print-ready artwork with zero tracking.",
+  title: "Pressroom — Music Print Studio",
+  description: "Make Music Visible. An independent music print studio—turn the albums you love into prints worth keeping, with 300 DPI export and zero tracking.",
+  icons: {
+    icon: '/icon.svg',
+  },
+  openGraph: {
+    title: "Pressroom — Music Print Studio",
+    description: "Make Music Visible. An independent music print studio.",
+    images: ['/brand/pressroom-lockup-horizontal.jpg'],
+  },
 };
 
 export default function RootLayout({

@@ -1,15 +1,34 @@
 
 import { usePosterStore } from '@/store/posterStore';
 
-export const PRINT_PRESETS = {
-    a4: { widthMm: 210, heightMm: 297, name: 'A4' },
-    a3: { widthMm: 297, heightMm: 420, name: 'A3' },
-    a2: { widthMm: 420, heightMm: 594, name: 'A2' },
-    letter: { widthMm: 215.9, heightMm: 279.4, name: 'Letter' },
-    tabloid: { widthMm: 279.4, heightMm: 431.8, name: 'Tabloid' },
-    instagram: { widthMm: 108, heightMm: 135, name: 'Instagram Portrait' },
-    square: { widthMm: 210, heightMm: 210, name: 'Square' },
-    print: { widthMm: 180, heightMm: 240, name: 'Print Standard' },
+export interface PresetDefinition {
+    widthMm: number;
+    heightMm: number;
+    name: string;
+    defaultPx?: { width: number; height: number };
+}
+
+export const PRINT_PRESETS: Record<string, PresetDefinition> = {
+    // Vinyl & Collector Sizes
+    vinyl12: { widthMm: 304.8, heightMm: 304.8, name: '12" LP Vinyl Sleeve (305 × 305 mm)', defaultPx: { width: 1080, height: 1080 } },
+    vinyl7: { widthMm: 177.8, heightMm: 177.8, name: '7" 45 RPM Single (178 × 178 mm)', defaultPx: { width: 900, height: 900 } },
+
+    // Standard Gallery & Wall Framing
+    frame18x24: { widthMm: 457.2, heightMm: 609.6, name: '18 × 24" Gallery Frame (457 × 610 mm)', defaultPx: { width: 1080, height: 1440 } },
+    frame24x36: { widthMm: 609.6, heightMm: 914.4, name: '24 × 36" Large Format (610 × 914 mm)', defaultPx: { width: 1080, height: 1620 } },
+
+    // Standard ISO Posters
+    a2: { widthMm: 420, heightMm: 594, name: 'A2 (420 × 594 mm)' },
+    a3: { widthMm: 297, heightMm: 420, name: 'A3 (297 × 420 mm) — Most Popular' },
+    a4: { widthMm: 210, heightMm: 297, name: 'A4 (210 × 297 mm)' },
+
+    // North American Print Standards
+    tabloid: { widthMm: 279.4, heightMm: 431.8, name: 'Tabloid (11 × 17 in)' },
+    letter: { widthMm: 215.9, heightMm: 279.4, name: 'Letter (8.5 × 11 in)' },
+
+    // Digital & Social Media
+    instagram: { widthMm: 216, heightMm: 270, name: 'Instagram 4:5 Portrait', defaultPx: { width: 1080, height: 1350 } },
+    story: { widthMm: 216, heightMm: 384, name: 'Story / Mobile Wallpaper 9:16', defaultPx: { width: 1080, height: 1920 } },
 };
 
 export function usePosterDimensions() {

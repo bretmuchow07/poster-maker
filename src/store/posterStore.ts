@@ -13,7 +13,7 @@ export interface PosterMetadata {
 }
 
 export interface PrintConfig {
-  preset: 'a4' | 'a3' | 'a2' | 'letter' | 'tabloid' | 'custom';
+  preset: 'a4' | 'a3' | 'a2' | 'letter' | 'tabloid' | 'vinyl12' | 'vinyl7' | 'frame18x24' | 'frame24x36' | 'instagram' | 'story' | 'custom';
   dpi: 72 | 150 | 300;
   showBleed: boolean;
   showMargins: boolean;
@@ -59,6 +59,12 @@ export interface LinerNotesConfig {
   align?: 'left' | 'center' | 'right';
 }
 
+export interface MatrixStampConfig {
+  visible: boolean;
+  text?: string;
+  speed?: '33⅓ RPM' | '45 RPM';
+}
+
 export interface FontConfig {
   letterSpacing: number;
   lineHeight: number;
@@ -79,9 +85,9 @@ export interface PosterConfig {
   imageLocked?: boolean;
   textColor: string;
   fontFamily: string;
-  template: 'modern' | 'split' | 'minimal' | 'palette';
+  template: 'modern' | 'split' | 'minimal' | 'palette' | 'cosmos';
   exportTrigger: number; // Increment to trigger export
-  exportFormat?: 'png' | 'jpg' | 'pdf';
+  exportFormat?: 'png' | 'jpg' | 'pdf' | 'svg';
   exportQuality?: number;
   exportTransparent?: boolean;
 
@@ -99,7 +105,7 @@ export interface PosterConfig {
   swatchShape?: 'square' | 'rounded' | 'circle';
 
   // Layout & Formatting
-  tracklistLayout?: 'single' | 'double' | 'inline';
+  tracklistLayout?: 'single' | 'double' | 'inline' | 'vinyl-sides';
   textEffect?: 'none' | 'blur-echo';
 
   // Signature script overlay
@@ -111,7 +117,23 @@ export interface PosterConfig {
   // Liner notes / producer credits
   linerNotes?: LinerNotesConfig;
 
+  // Vinyl Runout Matrix Stamp
+  matrixStamp?: MatrixStampConfig;
+  matrixStampPosition?: { left: number; top: number; width?: number };
+  qrCodePosition?: { left: number; top: number; width?: number };
+
+  // Parental Advisory Badge
+  showParentalAdvisory?: boolean;
+  parentalAdvisoryStyle?: 'classic' | 'inverted' | 'match-ink';
+  parentalAdvisoryPosition?: { left: number; top: number };
+  parentalAdvisoryScale?: number;
+
+  // Removable canvas elements
+  hiddenElements?: string[];
+
   // Advanced settings
+  autoFitTitle?: boolean;
+  qrCodeAnchor?: 'auto' | 'bottom-right' | 'bottom-left' | 'badge-dock';
   artistFontSize?: number;
   albumFontSize?: number;
   tracklistFontSize?: number;
@@ -134,10 +156,16 @@ export interface PosterConfig {
   padding?: number;
 
   // Position overrides (drag & drop)
-  artistPosition?: { left: number; top: number };
-  albumPosition?: { left: number; top: number };
-  tracklistPosition?: { left: number; top: number };
+  artistPosition?: { left: number; top: number; width?: number };
+  albumPosition?: { left: number; top: number; width?: number };
+  tracklistPosition?: { left: number; top: number; width?: number };
   swatchesPosition?: { left: number; top: number };
+  signaturePosition?: { left: number; top: number; width?: number };
+  linerNotesPosition?: { left: number; top: number; width?: number };
+  labelPosition?: { left: number; top: number; width?: number };
+  releaseDatePosition?: { left: number; top: number; width?: number };
+  labelFontSize?: number;
+  releaseDateFontSize?: number;
 
   // Alignment settings
   artistAlign?: 'left' | 'center' | 'right';
@@ -184,12 +212,13 @@ export interface PosterState {
   updateSignatureConfig: (signature: Partial<SignatureConfig>) => void;
   updateFrameBorderConfig: (frameBorder: Partial<FrameBorderConfig>) => void;
   updateLinerNotesConfig: (linerNotes: Partial<LinerNotesConfig>) => void;
+  updateMatrixStampConfig: (matrixStamp: Partial<MatrixStampConfig>) => void;
   setPaletteSwatches: (swatches: string[]) => void;
   updateTrack: (index: number, track: Partial<{ title: string; duration: string }>) => void;
   addTrack: () => void;
   removeTrack: (index: number) => void;
   importTracklist: (rawText: string) => number;
-  triggerExport: (format?: 'png' | 'jpg' | 'pdf', quality?: number, transparent?: boolean) => void;
+  triggerExport: (format?: 'png' | 'jpg' | 'pdf' | 'svg', quality?: number, transparent?: boolean) => void;
   setLoading: (loading: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
 
@@ -249,6 +278,8 @@ export const usePosterStore = create<PosterState>()(
         textColor: '#18181b',
         fontFamily: 'Inter',
         template: 'modern',
+        autoFitTitle: true,
+        qrCodeAnchor: 'auto',
         exportTrigger: 0,
         artistFontSize: 28,
         albumFontSize: 85,
@@ -390,6 +421,16 @@ export const usePosterStore = create<PosterState>()(
           config: {
             ...state.config,
             linerNotes: { ...(state.config.linerNotes || { visible: false, text: '', fontSize: 11, align: 'center' }), ...newLinerConfig },
+          },
+        })),
+
+      updateMatrixStampConfig: (newMatrixConfig) =>
+        set((state) => ({
+          past: [...state.past, createSnapshot(state)].slice(-MAX_HISTORY),
+          future: [],
+          config: {
+            ...state.config,
+            matrixStamp: { ...(state.config.matrixStamp || { visible: false, text: '', speed: '33⅓ RPM' }), ...newMatrixConfig },
           },
         })),
 
@@ -655,6 +696,8 @@ export const usePosterStore = create<PosterState>()(
             textColor: '#18181b',
             fontFamily: 'Inter',
             template: 'modern',
+            autoFitTitle: true,
+            qrCodeAnchor: 'auto',
             exportTrigger: 0,
             artistFontSize: 28,
             albumFontSize: 85,
